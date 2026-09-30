@@ -1,0 +1,563 @@
+<!-- 어플 연결 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <!-- 📱 PWA 풀스크린(꽉 찬 화면) 필수 뷰포트 설정 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>차량관리프로그램 - 이용자</title>
+
+    <!-- 📱 PWA 관련 필수 설정 추가 -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 📱 모바일 PWA 터치 스크롤 완전 해제 구성을 위한 CSS */
+        html {
+            font-size: 110%;
+            height: 100%;
+        }
+        
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; 
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            /* 아이폰/갤럭시 세이프 에어리어 자동 대응 */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* 💡 모바일 Safari / Chrome 모바일 전용 수직 스크롤러 보강 */
+        .custom-scroll {
+            overflow-y: scroll !important;
+            -webkit-overflow-scrolling: touch !important;
+            touch-action: pan-y !important;
+        }
+    </style>
+</head>
+<body class="bg-white font-sans w-full min-h-screen m-0 p-0">
+
+<!-- 📱 모바일 화면 전체를 꽉 채우도록 max-w-md 및 min-h 제한 제거 -->    
+<div id="user-view-container" class="w-full min-h-screen flex flex-col relative pb-16 bg-white">
+        
+        <div id="login-screen" class="flex-1 flex flex-col justify-center px-6 py-12">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-blue-600 tracking-tight">KlassAuto</h1>
+                <p class="text-gray-500 mt-2 text-sm">업무용 차량 관리 시스템 (직원용)</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">아이디</label>
+                    <input type="text" id="user-id" required class="w-full p-3 border rounded-lg text-sm" placeholder="마스터: admin / 일반: klass1">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">비밀번호</label>
+                    <input type="password" id="user-pw" required class="w-full p-3 border rounded-lg text-sm" placeholder="비밀번호 입력">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-lg font-bold text-sm shadow-md">
+                    로그인
+                </button>
+            </form>
+            <p id="login-error" class="text-red-500 text-xs text-center mt-3 hidden">아이디 또는 비밀번호가 올바르지 않습니다.</p>
+        </div>
+
+        <div id="main-screen" class="w-full flex-1 flex flex-col hidden">            
+            <header class="bg-blue-600 text-white px-4 py-4 flex justify-between items-center shadow-md sticky top-0 z-40">
+                <div>
+                    <span id="welcome-msg" class="font-bold text-sm">안녕하세요</span>
+                    <p id="branch-msg" class="text-[11px] text-blue-200 font-medium"></p>
+                </div>
+                <button onclick="handleLogout()" class="text-xs bg-blue-700 hover:bg-blue-800 px-3 py-1.5 rounded-md font-medium">로그아웃</button>
+            </header>
+
+            <main id="main1" class="w-full flex-1 p-4 space-y-5 custom-scroll pb-24">
+            <!-- <main class=""> -->
+                <div class="bg-blue-50 border border-blue-200 p-3.5 rounded-xl flex items-center justify-between shadow-sm">
+                    <div>
+                        <span class="block text-[11px] font-bold text-blue-500 uppercase tracking-wider">현재 지점 배정 차량</span>
+                        <div id="matched-vehicle-display" class="text-base font-extrabold text-gray-800 mt-0.5">차량 정보 없음</div>
+                    </div>
+                    <span class="text-2xl">🚗</span>
+                </div>
+
+                <div class="flex border-b">
+                    <button id="tab-drive" onclick="switchTab('drive')" class="flex-1 text-center py-3 font-bold text-sm border-b-2 border-blue-600 text-blue-600">📋 운행 기록</button>
+                    <button id="tab-expense" onclick="switchTab('expense')" class="flex-1 text-center py-3 font-bold text-sm border-b-2 border-transparent text-gray-400">💳 지출 / 정비</button>
+                </div>
+
+                <form id="log-form" onsubmit="handleSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="log-type" value="운행">
+                    <div id="drive-fields" class="space-y-4">
+                        <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-100 space-y-3">
+                            <span class="text-xs font-bold text-blue-700 block">🛫 출발 (사용시작)</span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="date" id="start-date" class="w-full p-2.5 border rounded-lg text-sm">
+                                <input type="time" id="start-time" class="w-full p-2.5 border rounded-lg text-sm">
+                            </div>
+                            <input type="number" id="start-km" class="w-full p-2.5 border rounded-lg text-sm" placeholder="출발 키로수 (km)" inputmode="numeric" pattern="[0-9]*">
+                            <input type="file" id="start-photo" accept="image/*" class="w-full text-xs text-gray-500 border p-1.5 rounded-lg bg-white">
+                        </div>
+                        <div class="bg-green-50/50 p-3 rounded-lg border border-green-100 space-y-3">
+                            <span class="text-xs font-bold text-green-700 block">🛬 도착 (사용종료)</span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="date" id="end-date" class="w-full p-2.5 border rounded-lg text-sm">
+                                <input type="time" id="end-time" class="w-full p-2.5 border rounded-lg text-sm">
+                            </div>
+                            <input type="number" id="end-km" class="w-full p-2.5 border rounded-lg text-sm" placeholder="도착 키로수 (km)" inputmode="numeric" pattern="[0-9]*">
+                            <input type="file" id="end-photo" accept="image/*" class="w-full text-xs text-gray-500 border p-1.5 rounded-lg bg-white">
+                        </div>
+                        <select id="drive-purpose" class="w-full p-3 border rounded-lg bg-white text-sm">
+                            <option value="일반업무용">업무용</option>
+                            <option value="출퇴근용">출퇴근용</option>
+                            <option value="개인용">개인용</option>
+                        </select>
+                    </div>
+                    <div id="expense-fields" class="space-y-4 hidden">
+                        <input type="date" id="expense-date" class="w-full p-3 border rounded-lg text-sm">
+                        <select id="expense-type" class="w-full p-3 border rounded-lg bg-white text-sm">
+                            <option value="주유비">주유비</option>
+                            <option value="통행료">통행료</option>
+                            <option value="주차비">주차비</option>
+                            <option value="정비비">정비</option>
+                            <option value="정비비">세차</option>
+                            <option value="정비비">기타</option>
+                        </select>
+                        <input type="number" id="amount" class="w-full p-3 border rounded-lg text-sm" placeholder="지출 금액 (원)">
+                        <input type="file" id="expense-photo" accept="image/*" class="w-full text-xs text-gray-500 border p-2 rounded-lg bg-gray-50">
+                    </div>
+                    <input type="text" id="content-memo" class="w-full p-3 border rounded-lg text-sm" placeholder="상세 내역 / 메모 입력">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg font-bold shadow-md">기록 등록하기</button>
+                </form>
+                <hr class="border-gray-200">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-gray-700">📊 최근 차량 내역 <span id="history-count" class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">0</span></h3>
+                        <button onclick="navigateTo('history')" class="text-xs font-bold text-blue-600">사용 내역 더보기 ➡️</button>
+                    </div>
+                    <div id="main-history-summary" class="space-y-3 pb-6"></div>
+                </div>
+            </main>
+
+            <!-- div id="history-screen" class="flex-1 flex flex-col hidden bg-gray-50" -->
+            <div id="history-screen" class="hidden space-y-4">
+                <header class="bg-gray-800 text-white px-4 py-4 flex items-center gap-3">
+                    <button onclick="navigateTo('main')" class="text-xs bg-gray-700 px-3 py-1.5 rounded font-bold">⬅️ 돌아가기</button>
+                    <div>
+                        <h2 class="font-bold text-sm" id="history-screen-title">전체 사용 내역</h2>
+                    </div>
+                </header>
+                <main class="flex-1 p-4 space-y-4 custom-scroll w-full pb-20">
+                    <div id="full-history-list" class="space-y-3 pb-6"></div>
+                </main>
+            </div>
+        </div>
+
+        
+
+        <div class="fixed bottom-0 left-0 right-0 h-14 bg-gradient-to-r from-blue-900 to-indigo-900 text-white flex items-center justify-between px-4 shadow-2xl border-t border-indigo-700/50 z-50">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">⚡</span>
+                <div>
+                    <div class="text-[12px] font-black tracking-wide text-blue-300 uppercase">KlassAuto Premium Rental</div>
+                    <div class="text-[12px] text-gray-200 font-medium tracking-tight">신차 장기렌트 & 리스 실시간 최저가 맞춤 설계</div>
+                </div>
+            </div>
+            <a href="http://klassauto.com/index.php" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1.5 rounded-lg shadow-sm transition">
+                바로가기
+            </a>
+        </div>
+    </div>
+    <script>
+        // 📱 PWA 서비스 워커 자동 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then((reg) => console.log('PWA ServiceWorker 등록 성공:', reg.scope))
+                    .catch((err) => console.error('PWA ServiceWorker 등록 실패:', err));
+            });
+        }
+
+        // 🔗 백엔드 API 서버 기본 주소 (상대 경로 지정으로 http/https 및 도메인 자동 매칭)
+        const SERVER_URL = "https://charm3007.cafe24.com/cars/api";
+
+        // 전산 세션 및 상태 관리 변수
+        let currentUserName = "";
+        let currentBranchName = "";
+        let currentUserRole = "";
+        let currentVehicleNum = "";
+
+        // 서버 동기화 데이터 보관용 배열
+        let MOCK_BRANCHES = [];
+        let MOCK_USERS = [];
+        let MOCK_VEHICLES = [];
+        let MOCK_HISTORIES = [];
+
+        // ----------------------------------------------------
+        // 1. 🔑 로그인 처리 함수 (DB 연동)
+        // ----------------------------------------------------
+        async function handleLogin(e) {
+            if (e) e.preventDefault(); // 1. 페이지 새로고침 방지
+
+            const idInput = document.getElementById('user-id');
+            const pwInput = document.getElementById('user-pw');
+            const loginError = document.getElementById('login-error'); // 요소 가져오기
+
+            if (!idInput || !pwInput) return;
+
+            const id = idInput.value.trim();
+            const pw = pwInput.value.trim();
+
+            if (!id || !pw) {
+                alert("아이디와 비밀번호를 입력해 주세요.");
+                return;
+            } 
+
+            try {
+                // 백엔드 login.php API로 ID/PW 전송
+                const response = await fetch(`${SERVER_URL}/login_user.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: id, user_pw: pw })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                   // 💡 [핵심 보강] result.user 가 없을 경우 result 자체에서 값을 안전하게 추출
+                    const userInfo = result.user || result;
+
+                    currentUserName = userInfo.name || "";
+                    currentBranchName = userInfo.branch || "";
+                    currentUserRole = userInfo.role || "";
+
+                    // 💡 loginError 요소가 존재할 때만 안전하게 hidden 클래스 추가
+                    if (loginError && loginError.classList) {
+                        loginError.classList.add('hidden');
+                    }
+
+                    // 로그인 성공 시 세션 저장
+                    currentUserName = result.user.name;
+                    currentBranchName = result.user.branch;
+                    currentUserRole = result.user.role;
+
+                    if (loginError) loginError.classList.add('hidden');
+
+                    // 로그인 화면 숨기기 & 메인 화면 표출
+                    const loginScreen = document.getElementById('login-screen');
+                    const mainScreen = document.getElementById('main-screen');
+                    if (loginScreen) {
+                        loginScreen.classList.add('hidden');
+                        loginScreen.style.display = 'none';
+                    }
+                    if (mainScreen) {
+                        mainScreen.classList.remove('hidden');
+                        mainScreen.style.display = 'block';
+                    }
+
+                    // 상단 헤더 메시지 갱신
+                    const welcomeEl = document.getElementById('welcome-msg');
+                    const branchEl = document.getElementById('branch-msg');
+                    if (welcomeEl) welcomeEl.innerText = `👋 ${currentUserName}님 안녕하세요`;
+                    if (branchEl) branchEl.innerText = `소속: ${currentBranchName}`;
+
+                    // 서버 데이터(지점, 차량, 대장 내역) 동기화 호출
+                    await loadServerData();
+
+                    // 날짜 및 시간 초기화
+                    setDefaultDates();
+
+                } else {
+                    if (loginError) {
+                        loginError.innerText = result.message || "아이디 또는 비밀번호가 올바르지 않습니다.";
+                        loginError.classList.remove('hidden');
+                    } else {
+                        alert(result.message || "로그인에 실패했습니다.");
+                    }
+                }
+            } catch (err) {
+                console.error("로그인 내부 처리 상세 에러:", err);
+                alert("서버 통신 중 오류가 발생했습니다. (F12 콘솔창의 에러 내용을 확인해 주세요)");
+            }
+        }
+
+        // ----------------------------------------------------
+        // 2. 🚖 전체 데이터 실시간 불러오기 (DB 동기화)
+        // ----------------------------------------------------
+        async function loadServerData() {
+            try {
+                const response = await fetch(`${SERVER_URL}/get_initial_data.php`);
+                const data = await response.json();
+
+                if (data.success) {
+                    MOCK_BRANCHES = data.branches || [];
+                    MOCK_USERS = data.users || [];
+                    MOCK_VEHICLES = data.vehicles || [];
+                    MOCK_HISTORIES = data.histories || [];
+
+                    // 소속 지점 차량 매칭 및 최근 내역 렌더링
+                    matchVehicleByBranch(currentBranchName);
+                    renderHistorySummary();
+
+                    // 기록 화면이 열려 있다면 기록 리스트도 갱신
+                    const historyScreen = document.getElementById('history-screen');
+                    if (historyScreen && !historyScreen.classList.contains('hidden')) {
+                        renderFullHistoryList();
+                    }
+                } else {
+                    console.error("데이터 동기화 실패:", data.message);
+                }
+            } catch (err) {
+                console.error("서버 데이터 로딩 에러:", err);
+            }
+        }
+
+        // ----------------------------------------------------
+        // 3. 📝 운행 기록 / 지출 내역 DB 등록 함수
+        // ----------------------------------------------------
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const logType = document.getElementById('log-type').value;
+
+            if (!currentVehicleNum) {
+                alert("지점에 배정된 매칭 차량이 없습니다. 관리자에게 문의하세요.");
+                return;
+            }
+
+            let payload = {
+                action: 'add_log',
+                vehicle_num: currentVehicleNum,
+                type: logType,
+                branch_name: currentBranchName,
+                user_name: currentUserName,
+                memo: document.getElementById('content-memo').value.trim()
+            };
+
+            if (logType === "운행") {
+                const startDate = document.getElementById('start-date').value;
+                const startTime = document.getElementById('start-time').value || "00:00";
+                const endDate = document.getElementById('end-date').value;
+                const endTime = document.getElementById('end-time').value || "00:00";
+
+                payload.start_datetime = `${startDate} ${startTime}`;
+                payload.start_km = Number(document.getElementById('start-km').value) || 0;
+                payload.end_datetime = `${endDate} ${endTime}`;
+                payload.end_km = Number(document.getElementById('end-km').value) || 0;
+                payload.purpose = document.getElementById('drive-purpose').value;
+            } else {
+                payload.expense_date = document.getElementById('expense-date').value;
+                payload.expense_type = document.getElementById('expense-type').value;
+                payload.amount = Number(document.getElementById('amount').value) || 0;
+            }
+
+            try {
+                const response = await fetch(`${SERVER_URL}/manage.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("차량 기록이 성공적으로 DB에 등록되었습니다.");
+                    
+                    // 입력 폼 초기화
+                    document.getElementById('start-km').value = "";
+                    document.getElementById('end-km').value = "";
+                    document.getElementById('amount').value = "";
+                    document.getElementById('content-memo').value = "";
+                    setDefaultDates();
+
+                    // DB 최신 내역 받아와서 화면에 다시 그리기
+                    await loadServerData();
+                } else {
+                    alert("등록 실패: " + (result.message || "DB 오류가 발생했습니다."));
+                }
+            } catch (err) {
+                console.error("기록 등록 통신 에러:", err);
+                alert("서버 통신 오류로 기록을 저장하지 못했습니다.");
+            }
+        }
+
+        // ----------------------------------------------------
+        // 4. 🔓 로그아웃 함수
+        // ----------------------------------------------------
+        function handleLogout() {
+            currentUserName = "";
+            currentBranchName = "";
+            currentUserRole = "";
+            currentVehicleNum = "";
+
+            const idEl = document.getElementById('user-id');
+            const pwEl = document.getElementById('user-pw');
+            if (idEl) idEl.value = "";
+            if (pwEl) pwEl.value = "";
+
+            const loginScreen = document.getElementById('login-screen');
+            const mainScreen = document.getElementById('main-screen');
+            const historyScreen = document.getElementById('history-screen');
+
+            if (mainScreen) {
+                mainScreen.style.display = '';
+                mainScreen.classList.add('hidden');
+            }
+            if (historyScreen) {
+                historyScreen.style.display = '';
+                historyScreen.classList.add('hidden');
+            }
+            if (loginScreen) {
+                loginScreen.style.display = '';
+                loginScreen.classList.remove('hidden');
+            }
+        }
+
+        // ----------------------------------------------------
+        // 5. 📱 화면 탭 / 렌더링 / 포맷팅 UI 헬퍼 함수들
+        // ----------------------------------------------------
+        function navigateTo(screenName) {
+            const main1 = document.getElementById('main1');
+            const historyScreen = document.getElementById('history-screen');
+
+            // 📱 [핵심 추가] 화면 전환 시 내부 스크롤을 맨 위로 고정
+            if (main1) main1.scrollTop = 0;
+            const historyMain = historyScreen ? historyScreen.querySelector('main') : null;
+            if (historyMain) historyMain.scrollTop = 0;
+            window.scrollTo(0, 0);
+
+            if (screenName === 'main') {
+                if (main1) main1.classList.remove('hidden');
+                if (historyScreen) historyScreen.classList.add('hidden');
+                renderHistorySummary();
+            } else if (screenName === 'history') {
+                if (main1) main1.classList.add('hidden');
+                if (historyScreen) historyScreen.classList.remove('hidden');
+                renderFullHistoryList();
+            }
+        }
+
+        function setDefaultDates() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${hours}:${minutes}`;
+
+            document.getElementById('start-date').value = today;
+            document.getElementById('start-time').value = currentTime;
+            document.getElementById('end-date').value = today;
+            document.getElementById('end-time').value = currentTime;
+            document.getElementById('expense-date').value = today;
+        }
+
+        function matchVehicleByBranch(branchName) {
+            const displayEl = document.getElementById('matched-vehicle-display');
+            const matchedCar = MOCK_VEHICLES.find(car => car.branch === branchName);
+            if (matchedCar) {
+                currentVehicleNum = matchedCar.vehicle_num;
+                displayEl.innerText = `${matchedCar.vehicle_num} (${matchedCar.model_name} / ${matchedCar.fuel || '휘발유'})`;
+                displayEl.className = "text-base font-extrabold text-blue-900 mt-0.5";
+            } else {
+                currentVehicleNum = "";
+                displayEl.innerText = "배정된 차량이 없습니다.";
+                displayEl.className = "text-base font-extrabold text-red-500 mt-0.5";
+            }
+        }
+
+        function createCardHTML(item) {
+            const startKm = Number(item.start_km || 0);
+            const endKm = Number(item.end_km || 0);
+            
+            const startKmFormatted = startKm.toLocaleString();
+            const endKmFormatted = endKm.toLocaleString();
+            const distanceFormatted = (endKm - startKm).toLocaleString();
+            const amountFormatted = Number(item.amount || 0).toLocaleString();
+
+            if (item.type === "운행") {
+                return `
+                        <span class="bg-blue-100 text-blue-700 font-medium px-2 py-0.5 rounded text-[11px]">📋 운행</span>
+                        <span class="bg-blue-100 text-blue-700 font-medium px-2 py-0.5 rounded text-[11px]">${item.user_name}</span>
+                        <span class="bg-blue-100 text-blue-700 font-medium px-2 py-0.5 rounded text-[11px]">${item.purpose}</span>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-1 leading-normal font-normal">🛫 <span class="font-semibold text-gray-900">출발:</span> ${item.start_datetime} (${startKmFormatted}km)</p>
+                    <p class="text-sm text-gray-700 leading-normal font-normal">🛬 <span class="font-semibold text-green-700">도착:</span> ${item.end_datetime} (${endKmFormatted}km, 주행거리 ${distanceFormatted}km)</p>
+                `;
+            } else {
+                return `
+                    <div class="flex justify-start items-center gap-1.5 mb-1.5">
+                        <span class="bg-orange-100 text-orange-700 font-medium px-2 py-0.5 rounded text-[11px]">💳 지출</span>
+                        <span class="bg-orange-100 text-orange-700 font-medium px-2 py-0.5 rounded text-[11px]">${item.user_name}</span>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-1 leading-normal font-normal">📅 <span class="font-semibold text-gray-900">지출일:</span> ${item.expense_date} | ${item.expense_type}</p>
+                    <p class="text-blue-600 font-semibold text-sm mt-1">💰 금액: ${amountFormatted} 원</p>
+                `;
+            }
+        }
+
+        function renderHistorySummary() {
+            const container = document.getElementById('main-history-summary');
+            container.innerHTML = "";
+
+            // 현재 매칭된 차량의 기록만 필터링
+            const filtered = MOCK_HISTORIES.filter(i => i.vehicle_num === currentVehicleNum);
+            document.getElementById('history-count').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-gray-400 py-4">내역이 없습니다.</p>`;
+                return;
+            }
+
+            // 최신 2개 내역 표출
+            filtered.slice(0, 2).forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-gray-50 border p-2.5 rounded-xl space-y-1 text-xs";
+                card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-gray-400 text-[10px]">📝 ${item.memo}</p>` : ''}`;
+                container.appendChild(card);
+            });
+        }
+
+        function renderFullHistoryList() {
+            const container = document.getElementById('full-history-list');
+            container.innerHTML = "";
+
+            const filtered = MOCK_HISTORIES.filter(i => i.vehicle_num === currentVehicleNum);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-gray-400 py-8">기록이 없습니다.</p>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white border p-3 rounded-xl space-y-1 text-xs";
+                card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-gray-400 text-[10px]">📝 ${item.memo}</p>` : ''}`;
+                container.appendChild(card);
+            });
+        }
+
+        function switchTab(type) {
+            document.getElementById('log-type').value = type === 'drive' ? '운행' : '지출/정비';
+            document.getElementById('tab-drive').className = type === 'drive' 
+                ? "flex-1 text-center py-3 font-bold text-sm border-b-2 border-blue-600 text-blue-600" 
+                : "flex-1 text-center py-3 font-bold text-sm border-b-2 border-transparent text-gray-400";
+            document.getElementById('tab-expense').className = type === 'expense' 
+                ? "flex-1 text-center py-3 font-bold text-sm border-b-2 border-blue-600 text-blue-600" 
+                : "flex-1 text-center py-3 font-bold text-sm border-b-2 border-transparent text-gray-400";
+            
+            type === 'drive' ? document.getElementById('drive-fields').classList.remove('hidden') : document.getElementById('drive-fields').classList.add('hidden');
+            type === 'expense' ? document.getElementById('expense-fields').classList.remove('hidden') : document.getElementById('expense-fields').classList.add('hidden');
+
+            // 📱 [핵심 추가] 탭을 바꿀 때도 입력 창 스크롤 위치를 맨 위로 리셋
+            const main1 = document.getElementById('main1');
+            if (main1) main1.scrollTop = 0;
+        }
+    </script>
+</body>
+</html>

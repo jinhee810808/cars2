@@ -1,0 +1,671 @@
+<!-- 체험하기 파일 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운행일지 프로그램 - 체험형</title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="img/logo_k3.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        html { font-size: 110%; }
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-100 text-gray-800 min-h-screen flex flex-col">
+
+    <!-- 메인 화면 컨테이너 -->
+    <div id="main-screen" class="w-full flex-1 flex flex-col">
+        
+        <!-- 상단 헤더 -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3">
+                        <img src="img/logo_blue.png" alt="KlassAuto" class="h-7 sm:h-8 w-auto object-contain drop-shadow-sm">
+                        <span class="text-sm bg-blue-50 text-blue-600 border border-blue-200 font-bold px-3 py-1 rounded-md">ㅇㅇㅇ회사 운행일지</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs sm:text-sm text-slate-600 bg-slate-50 border border-slate-200/90 px-3 py-1.5 rounded-lg max-w-xl">
+                        <span class="text-blue-600 font-extrabold shrink-0">✨ 오늘의 한마디</span>
+                        <span class="text-slate-300 shrink-0">|</span>
+                        <span id="today-quote-text" class="font-medium text-slate-700 truncate">성공을 확신하는 것이 성공의 첫 걸음이다. — 보브</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-5 self-end md:self-auto">
+                    <div class="text-right">
+                        <span id="welcome-msg" class="font-bold text-base text-gray-800">👋 유재석님 반갑습니다</span>
+                        <p id="branch-msg" class="text-xs sm:text-sm text-slate-500 font-medium">소속 지점: 본점 (로컬 모드)</p>
+                    </div>
+                    <button onclick="resetAllData()" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-2 rounded-xl transition border border-red-200 flex items-center gap-1.5" title="모든 데이터 초기화">
+                        <i class="fa-solid fa-rotate-right"></i> 데이터 리셋
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 본문 콘텐츠 -->
+        <main id="main1" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+            
+            <!-- 지점 배정 차량 상태 상단 배너 -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 sm:p-6 rounded-2xl shadow-md flex justify-between items-center">
+                <div class="space-y-1.5">
+                    <span class="text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">🏢 현재 지점 배정 업무 차량</span>
+                    <div id="matched-vehicle-display" class="text-xl sm:text-2xl font-black tracking-tight">123가 4567 (팰리세이드 / 경유)</div>
+                </div>
+                <div class="text-3xl sm:text-4xl bg-white/10 p-3.5 rounded-xl backdrop-blur-sm">
+                    🚗
+                </div>
+            </div>
+
+            <!-- 와이드 2단 분할 레이아웃 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- [좌측] 운행 및 지출 기록 입력 패널 -->
+                <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-sm space-y-5 flex flex-col justify-between">
+                    <div class="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                        <button id="tab-drive" onclick="switchTab('drive')" class="flex-1 py-3 rounded-lg font-bold text-sm sm:text-base transition bg-white text-blue-600 shadow-sm">
+                            📋 운행 기록 등록
+                        </button>
+                        <button id="tab-expense" onclick="switchTab('expense')" class="flex-1 py-3 rounded-lg font-bold text-sm sm:text-base transition text-slate-500 hover:text-slate-800">
+                            💳 지출 / 정비 등록
+                        </button>
+                    </div>
+
+                    <form id="log-form" onsubmit="handleSubmit(event)" class="space-y-5 flex-1 flex flex-col justify-between">
+                        <input type="hidden" id="log-type" value="운행">
+
+                        <div class="space-y-4">
+                            <!-- 운행 기록 필드 -->
+                            <div id="drive-fields" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100 space-y-3.5">
+                                        <span class="text-xs sm:text-sm font-bold text-blue-700 flex items-center gap-1.5">🛫 출발 (사용시작)</span>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">출발 일자</label>
+                                                <input type="date" id="start-date" class="w-full p-2.5 border rounded-lg text-xs sm:text-sm bg-white">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">출발 시간</label>
+                                                <input type="time" id="start-time" class="w-full p-2.5 border rounded-lg text-xs sm:text-sm bg-white">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 mb-1">출발 주행거리 (km)</label>
+                                            <input type="number" id="start-km" class="w-full p-2.5 border rounded-lg text-sm sm:text-base bg-white font-mono" placeholder="예: 12500">
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-100 space-y-3.5">
+                                        <span class="text-xs sm:text-sm font-bold text-emerald-700 flex items-center gap-1.5">🛬 도착 (사용종료)</span>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">도착 일자</label>
+                                                <input type="date" id="end-date" class="w-full p-2.5 border rounded-lg text-xs sm:text-sm bg-white">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-600 mb-1">도착 시간</label>
+                                                <input type="time" id="end-time" class="w-full p-2.5 border rounded-lg text-xs sm:text-sm bg-white">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 mb-1">도착 주행거리 (km)</label>
+                                            <input type="number" id="end-km" class="w-full p-2.5 border rounded-lg text-sm sm:text-base bg-white font-mono" placeholder="예: 12580">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs sm:text-sm font-bold text-slate-600 mb-1.5">운행 목적</label>
+                                    <select id="drive-purpose" class="w-full p-3 border rounded-xl bg-white text-sm sm:text-base font-medium">
+                                        <option value="일반업무용">일반업무용</option>
+                                        <option value="출퇴근용">출퇴근용</option>
+                                        <option value="고객미팅">고객미팅 / 외근</option>
+                                        <option value="차량이동/정비">차량이동 / 정비</option>
+                                        <option value="개인용">개인용</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 지출/정비 필드 -->
+                            <div id="expense-fields" class="space-y-4 hidden bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">지출 일자</label>
+                                        <input type="date" id="expense-date" class="w-full p-2.5 border rounded-lg text-xs sm:text-sm bg-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">지출 분류</label>
+                                        <select id="expense-type" class="w-full p-2.5 border rounded-lg bg-white text-xs sm:text-sm font-medium">
+                                            <option value="주유비">주유비 (연료비)</option>
+                                            <option value="통행료">통행료 (하이패스)</option>
+                                            <option value="주차비">주차비</option>
+                                            <option value="정비비">정비 및 수리</option>
+                                            <option value="세차비">세차비</option>
+                                            <option value="기타">기타 지출</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">지출 금액 (원)</label>
+                                    <input type="number" id="amount" class="w-full p-2.5 border rounded-lg text-sm sm:text-base bg-white font-mono" placeholder="금액 입력 (예: 50000)">
+                                </div>
+                            </div>
+
+                            <!-- 메모 입력란 -->
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-slate-600 mb-1.5">상세 내역 / 메모</label>
+                                <input type="text" id="content-memo" class="w-full p-3 border rounded-xl text-sm sm:text-base" placeholder="상세 목적지 또는 정비 내역을 입력해 주세요">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold text-base shadow-md transition duration-200 mt-4">
+                            기록 등록하기
+                        </button>
+                    </form>
+                </div>
+
+                <!-- [우측] 최근 차량 이용 내역 현황판 -->
+                <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-sm space-y-4 flex flex-col">
+                    <div class="flex justify-between items-center border-b pb-3 shrink-0">
+                        <h3 class="text-base sm:text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <span>📊</span> 최근 차량 이용 내역 
+                            <span id="history-count" class="text-xs bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full font-bold">0건</span>
+                        </h3>
+                        <button onclick="navigateTo('history')" class="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition">
+                            전체 내역 보기 ➡️
+                        </button>
+                    </div>
+                    <div id="main-history-summary" class="space-y-3 overflow-y-auto pr-1 flex-1 max-h-[560px]"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 전체 사용 내역 화면 -->
+        <div id="history-screen" class="hidden flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-bold text-gray-900">전체 차량 사용 내역</h2>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md font-bold" id="full-history-total-count">총 0건</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1">로컬 스토리지에 저장된 전체 운행 및 지출/정비 기록입니다.</p>
+                    </div>
+                    <button onclick="navigateTo('main')" class="text-xs sm:text-sm bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-arrow-left"></i> 대시보드로 돌아가기
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <!-- 운행 기록 -->
+                    <div class="bg-slate-50/70 border border-blue-100 rounded-2xl p-4 sm:p-5 space-y-3">
+                        <div class="flex justify-between items-center border-b border-blue-100 pb-2.5">
+                            <h3 class="text-sm sm:text-base font-extrabold text-blue-900 flex items-center gap-2">
+                                <span class="bg-blue-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-xs">📋</span>
+                                운행 기록 내역
+                            </h3>
+                            <span id="drive-history-count" class="text-xs bg-blue-100 text-blue-700 font-bold px-2.5 py-0.5 rounded-full">0건</span>
+                        </div>
+                        <div id="full-drive-history-list" class="space-y-3 max-h-[650px] overflow-y-auto pr-1"></div>
+                    </div>
+
+                    <!-- 지출 내역 -->
+                    <div class="bg-slate-50/70 border border-amber-100 rounded-2xl p-4 sm:p-5 space-y-3">
+                        <div class="flex justify-between items-center border-b border-amber-100 pb-2.5">
+                            <h3 class="text-sm sm:text-base font-extrabold text-amber-900 flex items-center gap-2">
+                                <span class="bg-amber-500 text-white w-6 h-6 rounded-lg flex items-center justify-center text-xs">💳</span>
+                                지출 / 정비 내역
+                            </h3>
+                            <span id="expense-history-count" class="text-xs bg-amber-100 text-amber-700 font-bold px-2.5 py-0.5 rounded-full">0건</span>
+                        </div>
+                        <div id="full-expense-history-list" class="space-y-3 max-h-[650px] overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-auto border-t border-gray-200 bg-white py-6 text-gray-400 text-center text-xs leading-relaxed font-medium">
+            <p class="font-mono tracking-wide">ⓒ LEASEMANSOFT ALL RIGHTS RESERVED (Javascript Local Mode)</p>
+        </footer>
+    </div>
+
+    <!-- 수정 모달 -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 bg-slate-50 border-b flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span id="modal-type-badge" class="bg-blue-600 text-white font-bold text-xs px-2.5 py-0.5 rounded">운행</span>
+                    <h3 class="font-bold text-gray-900 text-base">기록 상세 수정</h3>
+                </div>
+                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="edit-form" onsubmit="handleUpdateLog(event)" class="p-6 space-y-4 overflow-y-auto flex-1 text-sm">
+                <input type="hidden" id="edit-log-id">
+                <input type="hidden" id="edit-log-type">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">작성자 성명</label>
+                    <input type="text" id="edit-user-name" required class="w-full p-2.5 border rounded-xl bg-white">
+                </div>
+
+                <div id="modal-drive-fields" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">출발 일시</label>
+                            <input type="text" id="edit-start-datetime" class="w-full p-2 border rounded-lg text-xs bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">출발 주행거리(km)</label>
+                            <input type="number" id="edit-start-km" class="w-full p-2 border rounded-lg text-xs bg-white font-mono">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">도착 일시</label>
+                            <input type="text" id="edit-end-datetime" class="w-full p-2 border rounded-lg text-xs bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">도착 주행거리(km)</label>
+                            <input type="number" id="edit-end-km" class="w-full p-2 border rounded-lg text-xs bg-white font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">운행 목적</label>
+                        <select id="edit-drive-purpose" class="w-full p-2.5 border rounded-xl bg-white text-xs">
+                            <option value="일반업무용">일반업무용</option>
+                            <option value="출퇴근용">출퇴근용</option>
+                            <option value="고객미팅">고객미팅 / 외근</option>
+                            <option value="차량이동/정비">차량이동 / 정비</option>
+                            <option value="개인용">개인용</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="modal-expense-fields" class="space-y-3 hidden">
+                    <div class="grid grid-cols-2 gap-3 bg-amber-50/50 p-3 rounded-xl border border-amber-100">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">지출 일자</label>
+                            <input type="date" id="edit-expense-date" class="w-full p-2 border rounded-lg text-xs bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">지출 분류</label>
+                            <select id="edit-expense-type" class="w-full p-2 border rounded-lg text-xs bg-white">
+                                <option value="주유비">주유비 (연료비)</option>
+                                <option value="통행료">통행료 (하이패스)</option>
+                                <option value="주차비">주차비</option>
+                                <option value="정비비">정비 및 수리</option>
+                                <option value="세차비">세차비</option>
+                                <option value="기타">기타 지출</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">지출 금액(원)</label>
+                        <input type="number" id="edit-amount" class="w-full p-2.5 border rounded-xl bg-white font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">상세 메모</label>
+                    <input type="text" id="edit-memo" class="w-full p-2.5 border rounded-xl bg-white">
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t gap-2">
+                    <button type="button" onclick="handleDeleteLog()" class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs transition">
+                        🗑️ 삭제하기
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeEditModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                            취소
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition">
+                            수정 저장
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 순수 JavaScript 로컬 로직 -->
+    <script>
+        const DEFAULT_VEHICLE = "123가 4567";
+        const DEFAULT_USER = "유재석";
+        const STORAGE_KEY = "local_car_histories";
+
+        const INITIAL_MOCK_DATA = [
+            { id: "1", vehicle_num: DEFAULT_VEHICLE, type: "운행", user_name: DEFAULT_USER, start_datetime: "2026-08-24 09:00", end_datetime: "2026-08-24 11:30", start_km: 12500, end_km: 12560, purpose: "일반업무용", memo: "고객사 미팅 이동" },
+            { id: "2", vehicle_num: DEFAULT_VEHICLE, type: "지출/정비", user_name: DEFAULT_USER, expense_date: "2026-08-24", expense_type: "주유비", amount: 65000, memo: "휘발유 가득 주유" }
+        ];
+
+        let localHistories = [];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadLocalData();
+            setDefaultDates();
+            renderAllViews();
+        });
+
+        function loadLocalData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    localHistories = JSON.parse(saved);
+                } catch (e) {
+                    localHistories = [...INITIAL_MOCK_DATA];
+                }
+            } else {
+                localHistories = [...INITIAL_MOCK_DATA];
+                saveToStorage();
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(localHistories));
+        }
+
+        function resetAllData() {
+            if (confirm("모든 기록을 초기 샘플 데이터로 복원하시겠습니까?")) {
+                localHistories = [...INITIAL_MOCK_DATA];
+                saveToStorage();
+                renderAllViews();
+            }
+        }
+
+        function setDefaultDates() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${hours}:${minutes}`;
+
+            document.getElementById('start-date').value = today;
+            document.getElementById('start-time').value = currentTime;
+            document.getElementById('end-date').value = today;
+            document.getElementById('end-time').value = currentTime;
+            document.getElementById('expense-date').value = today;
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            const logType = document.getElementById('log-type').value;
+
+            const newId = Date.now().toString();
+            let newRecord = {
+                id: newId,
+                vehicle_num: DEFAULT_VEHICLE,
+                type: logType,
+                user_name: DEFAULT_USER,
+                memo: document.getElementById('content-memo').value.trim()
+            };
+
+            if (logType === "운행") {
+                const startDate = document.getElementById('start-date').value;
+                const startTime = document.getElementById('start-time').value || "00:00";
+                const endDate = document.getElementById('end-date').value;
+                const endTime = document.getElementById('end-time').value || "00:00";
+
+                newRecord.start_datetime = `${startDate} ${startTime}`;
+                newRecord.start_km = Number(document.getElementById('start-km').value) || 0;
+                newRecord.end_datetime = `${endDate} ${endTime}`;
+                newRecord.end_km = Number(document.getElementById('end-km').value) || 0;
+                newRecord.purpose = document.getElementById('drive-purpose').value;
+            } else {
+                newRecord.expense_date = document.getElementById('expense-date').value;
+                newRecord.expense_type = document.getElementById('expense-type').value;
+                newRecord.amount = Number(document.getElementById('amount').value) || 0;
+            }
+
+            localHistories.unshift(newRecord);
+            saveToStorage();
+
+            document.getElementById('start-km').value = "";
+            document.getElementById('end-km').value = "";
+            document.getElementById('amount').value = "";
+            document.getElementById('content-memo').value = "";
+            setDefaultDates();
+
+            renderAllViews();
+            alert("기록이 로컬에 저장되었습니다.");
+        }
+
+        function createCardHTML(item) {
+            const startKm = Number(item.start_km || 0);
+            const endKm = Number(item.end_km || 0);
+            const startKmFormatted = startKm.toLocaleString();
+            const endKmFormatted = endKm.toLocaleString();
+            const distanceFormatted = (endKm - startKm).toLocaleString();
+            const amountFormatted = Number(item.amount || 0).toLocaleString();
+
+            const editAttr = `onclick="openEditModal('${item.id}')" title="클릭하여 수정/삭제"`;
+
+            if (item.type === "운행") {
+                return `
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-700 font-bold px-2.5 py-0.5 rounded text-xs">📋 운행</span>
+                            <span ${editAttr} class="text-sm font-semibold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer flex items-center gap-1 group">
+                                ${item.user_name} <i class="fa-solid fa-pen-to-square text-[11px] text-slate-400 group-hover:text-blue-500"></i>
+                            </span>
+                        </div>
+                        <span class="text-xs bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded">${item.purpose || '일반업무용'}</span>
+                    </div>
+                    <div class="space-y-1.5 text-sm text-gray-700">
+                        <p>🛫 <span class="font-semibold text-gray-900">출발:</span> ${item.start_datetime} (${startKmFormatted} km)</p>
+                        <p>🛬 <span class="font-semibold text-emerald-700">도착:</span> ${item.end_datetime} (${endKmFormatted} km, 주행: <b class="text-blue-600 font-bold">${distanceFormatted} km</b>)</p>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-amber-100 text-amber-700 font-bold px-2.5 py-0.5 rounded text-xs">💳 지출</span>
+                            <span ${editAttr} class="text-sm font-semibold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer flex items-center gap-1 group">
+                                ${item.user_name} <i class="fa-solid fa-pen-to-square text-[11px] text-slate-400 group-hover:text-blue-500"></i>
+                            </span>
+                        </div>
+                        <span class="text-xs font-bold text-amber-700">${item.expense_type}</span>
+                    </div>
+                    <div class="space-y-1.5 text-sm text-gray-700">
+                        <p>📅 <span class="font-semibold text-gray-900">지출일:</span> ${item.expense_date}</p>
+                        <p class="text-amber-600 font-extrabold text-base">💰 금액: ${amountFormatted} 원</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderAllViews() {
+            renderHistorySummary();
+            renderFullHistoryList();
+        }
+
+        function renderHistorySummary() {
+            const container = document.getElementById('main-history-summary');
+            container.innerHTML = "";
+            document.getElementById('history-count').innerText = `${localHistories.length}건`;
+
+            if (localHistories.length === 0) {
+                container.innerHTML = `<p class="text-center text-sm text-gray-400 py-10">등록된 최근 내역이 없습니다.</p>`;
+                return;
+            }
+
+            localHistories.slice(0, 5).forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 hover:bg-slate-100 transition border border-slate-200 p-4 rounded-xl space-y-2 text-sm";
+                card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.memo}</p>` : ''}`;
+                container.appendChild(card);
+            });
+        }
+
+        function renderFullHistoryList() {
+            const driveContainer = document.getElementById('full-drive-history-list');
+            const expenseContainer = document.getElementById('full-expense-history-list');
+            const totalCountEl = document.getElementById('full-history-total-count');
+            const driveCountEl = document.getElementById('drive-history-count');
+            const expenseCountEl = document.getElementById('expense-history-count');
+
+            if (!driveContainer || !expenseContainer) return;
+
+            driveContainer.innerHTML = "";
+            expenseContainer.innerHTML = "";
+
+            if (totalCountEl) totalCountEl.innerText = `총 ${localHistories.length}건`;
+
+            const driveLogs = localHistories.filter(i => i.type === "운행");
+            const expenseLogs = localHistories.filter(i => i.type !== "운행");
+
+            if (driveCountEl) driveCountEl.innerText = `${driveLogs.length}건`;
+            if (expenseCountEl) expenseCountEl.innerText = `${expenseLogs.length}건`;
+
+            if (driveLogs.length === 0) {
+                driveContainer.innerHTML = `<p class="text-center text-sm text-slate-400 py-12 bg-white rounded-xl border border-dashed border-slate-200">등록된 운행 기록이 없습니다.</p>`;
+            } else {
+                driveLogs.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white border border-slate-200 p-4 rounded-xl space-y-2 text-sm shadow-xs";
+                    card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.memo}</p>` : ''}`;
+                    driveContainer.appendChild(card);
+                });
+            }
+
+            if (expenseLogs.length === 0) {
+                expenseContainer.innerHTML = `<p class="text-center text-sm text-slate-400 py-12 bg-white rounded-xl border border-dashed border-slate-200">등록된 지출/정비 내역이 없습니다.</p>`;
+            } else {
+                expenseLogs.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white border border-slate-200 p-4 rounded-xl space-y-2 text-sm shadow-xs";
+                    card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.memo}</p>` : ''}`;
+                    expenseContainer.appendChild(card);
+                });
+            }
+        }
+
+        function switchTab(type) {
+            document.getElementById('log-type').value = type === 'drive' ? '운행' : '지출/정비';
+            const tabDrive = document.getElementById('tab-drive');
+            const tabExpense = document.getElementById('tab-expense');
+            
+            if (type === 'drive') {
+                tabDrive.className = "flex-1 py-3 rounded-lg font-bold text-sm sm:text-base transition bg-white text-blue-600 shadow-sm";
+                tabExpense.className = "flex-1 py-3 rounded-lg font-bold text-sm sm:text-base transition text-slate-500 hover:text-slate-800";
+                document.getElementById('drive-fields').classList.remove('hidden');
+                document.getElementById('expense-fields').classList.add('hidden');
+            } else {
+                tabDrive.className = "flex-1 py-3 rounded-lg font-bold text-sm sm:text-base transition text-slate-500 hover:text-slate-800";
+                tabExpense.className = "flex-1 py-3 rounded-lg font-bold text-sm sm:text-base transition bg-white text-blue-600 shadow-sm";
+                document.getElementById('drive-fields').classList.add('hidden');
+                document.getElementById('expense-fields').classList.remove('hidden');
+            }
+        }
+
+        function navigateTo(screenName) {
+            const main1 = document.getElementById('main1');
+            const historyScreen = document.getElementById('history-screen');
+            window.scrollTo(0, 0);
+
+            if (screenName === 'main') {
+                main1.classList.remove('hidden');
+                historyScreen.classList.add('hidden');
+                renderHistorySummary();
+            } else {
+                main1.classList.add('hidden');
+                historyScreen.classList.remove('hidden');
+                renderFullHistoryList();
+            }
+        }
+
+        function openEditModal(logId) {
+            const target = localHistories.find(item => item.id === logId);
+            if (!target) return;
+
+            document.getElementById('edit-log-id').value = target.id;
+            document.getElementById('edit-log-type').value = target.type;
+            document.getElementById('edit-user-name').value = target.user_name || '';
+            document.getElementById('edit-memo').value = target.memo || '';
+
+            const badge = document.getElementById('modal-type-badge');
+            const driveFields = document.getElementById('modal-drive-fields');
+            const expenseFields = document.getElementById('modal-expense-fields');
+
+            if (target.type === "운행") {
+                badge.innerText = "운행";
+                badge.className = "bg-blue-600 text-white font-bold text-xs px-2.5 py-0.5 rounded";
+                driveFields.classList.remove('hidden');
+                expenseFields.classList.add('hidden');
+
+                document.getElementById('edit-start-datetime').value = target.start_datetime || '';
+                document.getElementById('edit-start-km').value = target.start_km || 0;
+                document.getElementById('edit-end-datetime').value = target.end_datetime || '';
+                document.getElementById('edit-end-km').value = target.end_km || 0;
+                document.getElementById('edit-drive-purpose').value = target.purpose || '일반업무용';
+            } else {
+                badge.innerText = "지출/정비";
+                badge.className = "bg-amber-500 text-white font-bold text-xs px-2.5 py-0.5 rounded";
+                driveFields.classList.add('hidden');
+                expenseFields.classList.remove('hidden');
+
+                document.getElementById('edit-expense-date').value = target.expense_date || '';
+                document.getElementById('edit-expense-type').value = target.expense_type || '기타';
+                document.getElementById('edit-amount').value = target.amount || 0;
+            }
+
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function handleUpdateLog(e) {
+            e.preventDefault();
+            const logId = document.getElementById('edit-log-id').value;
+            const logType = document.getElementById('edit-log-type').value;
+
+            const index = localHistories.findIndex(item => item.id === logId);
+            if (index !== -1) {
+                localHistories[index].user_name = document.getElementById('edit-user-name').value.trim();
+                localHistories[index].memo = document.getElementById('edit-memo').value.trim();
+
+                if (logType === "운행") {
+                    localHistories[index].start_datetime = document.getElementById('edit-start-datetime').value.trim();
+                    localHistories[index].start_km = Number(document.getElementById('edit-start-km').value) || 0;
+                    localHistories[index].end_datetime = document.getElementById('edit-end-datetime').value.trim();
+                    localHistories[index].end_km = Number(document.getElementById('edit-end-km').value) || 0;
+                    localHistories[index].purpose = document.getElementById('edit-drive-purpose').value;
+                } else {
+                    localHistories[index].expense_date = document.getElementById('edit-expense-date').value;
+                    localHistories[index].expense_type = document.getElementById('edit-expense-type').value;
+                    localHistories[index].amount = Number(document.getElementById('edit-amount').value) || 0;
+                }
+
+                saveToStorage();
+                closeEditModal();
+                renderAllViews();
+                alert("수정되었습니다.");
+            }
+        }
+
+        function handleDeleteLog() {
+            const logId = document.getElementById('edit-log-id').value;
+            if (confirm("정말로 이 기록을 삭제하시겠습니까?")) {
+                localHistories = localHistories.filter(item => item.id !== logId);
+                saveToStorage();
+                closeEditModal();
+                renderAllViews();
+                alert("삭제되었습니다.");
+            }
+        }
+    </script>
+</body>
+</html>

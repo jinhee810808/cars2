@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KlassAuto 차량 관리 시스템 (통합 프로토타입 v18)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen p-3 sm:p-6 flex flex-col items-center">
+
+    <div class="w-full bg-gray-900 text-white p-3 rounded-xl mb-5 flex justify-between items-center shadow-md text-xs sm:text-sm px-6">
+        <span class="font-bold text-yellow-400">🛠️ 프로토타입 화면 스위처</span>
+        <div class="space-x-2">
+            <button onclick="switchViewMode('user')" id="btn-view-user" class="bg-blue-600 px-3 py-1.5 rounded font-bold">📱 모바일 직원 화면</button>
+            <button onclick="switchViewMode('admin')" id="btn-view-admin" class="bg-gray-600 hover:bg-gray-700 px-3 py-1.5 rounded font-bold">💻 PC 관리자(Admin) 화면</button>
+        </div>
+    </div>
+
+    <div id="user-view-container" class="w-full max-w-md bg-white min-h-[85vh] shadow-xl flex flex-col relative rounded-2xl overflow-hidden">
+        
+        <div id="login-screen" class="flex-1 flex flex-col justify-center px-6 py-12">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-blue-600 tracking-tight">KlassAuto</h1>
+                <p class="text-gray-500 mt-2 text-sm">업무용 차량 관리 시스템 (직원용)</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">아이디</label>
+                    <input type="text" id="user-id" required class="w-full p-3 border rounded-lg text-sm" placeholder="마스터: admin / 일반: klass1">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">비밀번호</label>
+                    <input type="password" id="user-pw" required class="w-full p-3 border rounded-lg text-sm" placeholder="비밀번호 입력">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-lg font-bold text-sm shadow-md">
+                    로그인
+                </button>
+            </form>
+            <p id="login-error" class="text-red-500 text-xs text-center mt-3 hidden">아이디 또는 비밀번호가 올바르지 않습니다.</p>
+        </div>
+
+        <div id="main-screen" class="flex-1 flex flex-col hidden">
+            <header class="bg-blue-600 text-white px-4 py-4 flex justify-between items-center shadow-md">
+                <div>
+                    <span id="welcome-msg" class="font-bold text-sm">안녕하세요</span>
+                    <p id="branch-msg" class="text-[11px] text-blue-200 font-medium"></p>
+                </div>
+                <button onclick="handleLogout()" class="text-xs bg-blue-700 hover:bg-blue-800 px-3 py-1.5 rounded-md font-medium">로그아웃</button>
+            </header>
+
+            <main class="flex-1 p-4 space-y-5 overflow-y-auto max-h-[70vh]">
+                <div class="bg-blue-50 border border-blue-200 p-3.5 rounded-xl flex items-center justify-between shadow-sm">
+                    <div>
+                        <span class="block text-[11px] font-bold text-blue-500 uppercase tracking-wider">현재 지점 배정 차량</span>
+                        <div id="matched-vehicle-display" class="text-base font-extrabold text-gray-800 mt-0.5">차량 정보 없음</div>
+                    </div>
+                    <span class="text-2xl">🚗</span>
+                </div>
+
+                <div class="flex border-b">
+                    <button id="tab-drive" onclick="switchTab('drive')" class="flex-1 text-center py-3 font-bold text-sm border-b-2 border-blue-600 text-blue-600">📋 운행 기록</button>
+                    <button id="tab-expense" onclick="switchTab('expense')" class="flex-1 text-center py-3 font-bold text-sm border-b-2 border-transparent text-gray-400">💳 지출 / 정비</button>
+                </div>
+
+                <form id="log-form" onsubmit="handleSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="log-type" value="운행">
+                    <div id="drive-fields" class="space-y-4">
+                        <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-100 space-y-3">
+                            <span class="text-xs font-bold text-blue-700 block">🛫 출발 (사용시작)</span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="date" id="start-date" class="w-full p-2.5 border rounded-lg text-sm">
+                                <input type="time" id="start-time" class="w-full p-2.5 border rounded-lg text-sm">
+                            </div>
+                            <input type="number" id="start-km" class="w-full p-2.5 border rounded-lg text-sm" placeholder="출발 키로수 (km)">
+                            <input type="file" id="start-photo" accept="image/*" class="w-full text-xs text-gray-500 border p-1.5 rounded-lg bg-white">
+                        </div>
+                        <div class="bg-green-50/50 p-3 rounded-lg border border-green-100 space-y-3">
+                            <span class="text-xs font-bold text-green-700 block">🛬 도착 (사용종료)</span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="date" id="end-date" class="w-full p-2.5 border rounded-lg text-sm">
+                                <input type="time" id="end-time" class="w-full p-2.5 border rounded-lg text-sm">
+                            </div>
+                            <input type="number" id="end-km" class="w-full p-2.5 border rounded-lg text-sm" placeholder="도착 키로수 (km)">
+                            <input type="file" id="end-photo" accept="image/*" class="w-full text-xs text-gray-500 border p-1.5 rounded-lg bg-white">
+                        </div>
+                        <select id="drive-purpose" class="w-full p-3 border rounded-lg bg-white text-sm">
+                            <option value="일반업무용">일반업무용</option>
+                            <option value="거래처방문">거래처방문</option>
+                            <option value="출퇴근용">출퇴근용</option>
+                            <option value="개인용">개인용</option>
+                        </select>
+                    </div>
+                    <div id="expense-fields" class="space-y-4 hidden">
+                        <input type="date" id="expense-date" class="w-full p-3 border rounded-lg text-sm">
+                        <select id="expense-type" class="w-full p-3 border rounded-lg bg-white text-sm">
+                            <option value="주유비">주유비</option>
+                            <option value="통행료">통행료</option>
+                            <option value="주차비">주차비</option>
+                            <option value="정비비">정비비</option>
+                        </select>
+                        <input type="number" id="amount" class="w-full p-3 border rounded-lg text-sm" placeholder="지출 금액 (원)">
+                        <input type="file" id="expense-photo" accept="image/*" class="w-full text-xs text-gray-500 border p-2 rounded-lg bg-gray-50">
+                    </div>
+                    <input type="text" id="content-memo" class="w-full p-3 border rounded-lg text-sm" placeholder="상세 내역 / 메모 입력">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg font-bold shadow-md">기록 등록하기</button>
+                </form>
+                <hr class="border-gray-200">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-gray-700">📊 최근 차량 내역 <span id="history-count" class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">0</span></h3>
+                        <button onclick="navigateTo('history')" class="text-xs font-bold text-blue-600">사용 내역 더보기 ➡️</button>
+                    </div>
+                    <div id="main-history-summary" class="space-y-3 pb-6"></div>
+                </div>
+            </main>
+        </div>
+
+        <div id="history-screen" class="flex-1 flex flex-col hidden bg-gray-50">
+            <header class="bg-gray-800 text-white px-4 py-4 flex items-center gap-3">
+                <button onclick="navigateTo('main')" class="text-xs bg-gray-700 px-3 py-1.5 rounded font-bold">⬅️ 돌아가기</button>
+                <div>
+                    <h2 class="font-bold text-sm" id="history-screen-title">전체 사용 내역</h2>
+                </div>
+            </header>
+            <main class="flex-1 p-4 space-y-4 overflow-y-auto max-h-[75vh]">
+                <div id="full-history-list" class="space-y-3 pb-6"></div>
+            </main>
+        </div>
+    </div>
+
+
+    <div id="admin-view-container" class="w-full flex flex-col lg:flex-row items-start gap-6 px-2 sm:px-4 hidden">
+        
+        <div class="w-full lg:w-60 lg:sticky lg:top-6 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-4 space-y-4 shadow-md shrink-0">
+            <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                <span class="text-xs font-black text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                    <span>📢</span> 사내 공지 / 광고
+                </span>
+                <span class="text-[9px] bg-gray-200 text-gray-600 font-semibold px-1 rounded">AD</span>
+            </div>
+            
+            <div class="bg-white border rounded-xl p-3 text-center space-y-2 shadow-inner">
+                <div class="text-base font-black text-blue-600 tracking-tight">KlassAuto</div>
+                <p class="text-[11px] text-gray-500 leading-relaxed font-medium">최상의 자동차 클라스오토입니다.<br>신차구매/장기렌트/리스</p>
+                <a href="http://klassauto.com/index.php" class="inline-block text-[10px] bg-blue-600 text-white font-bold px-3 py-1 rounded-md mt-1 hover:bg-blue-700 transition" target="_blank">자세히 보기</a>
+            </div>
+
+            <div class="bg-gray-800 text-white border rounded-xl p-3.5 text-center space-y-2 shadow">
+                <div class="text-xs font-extrabold text-yellow-400">💡 서버 연동 안내</div>
+                <p class="text-[11px] text-gray-300 leading-relaxed">UI 확정 후 백엔드 서버(PHP/MySQL) 데이터 결합 준비 단계입니다.</p>
+            </div>
+        </div>
+
+        <div class="flex-1 bg-white border border-gray-200 shadow-xl rounded-2xl p-6 space-y-6 w-full">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-5 gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-2xl font-black text-gray-900 tracking-tight">KlassAuto 본사 통합 시스템 관리 센터</h1>
+                        <span class="bg-red-500 text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-md uppercase tracking-wider">PC Web Admin</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">지점 제어, 차량 입고, 전 지점 직원 권한 발급 및 계정 제외를 총괄 제어하는 통합 본부 제어판입니다.</p>
+                </div>
+                <div class="bg-gray-50 border rounded-xl p-2.5 px-4 flex items-center gap-4 text-xs sm:text-sm">
+                    <div><span class="text-gray-400">인가 지점</span> <b class="text-emerald-600 ml-1" id="admin-summary-branches">0개</b></div>
+                    <div class="w-px h-4 bg-gray-200"></div>
+                    <div><span class="text-gray-400">등록 차량</span> <b class="text-blue-600 ml-1" id="admin-summary-cars">0대</b></div>
+                    <div class="w-px h-4 bg-gray-200"></div>
+                    <div><span class="text-gray-400">사내 직원수</span> <b class="text-teal-600 ml-1" id="admin-summary-staffs">0명</b></div>
+                    <div class="w-px h-4 bg-gray-200"></div>
+                    <div><span class="text-gray-400">전체 기록수</span> <b class="text-indigo-600 ml-1" id="admin-summary-logs">0건</b></div>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50/50 border border-emerald-200 p-5 rounded-2xl space-y-4">
+                <div>
+                    <h3 class="text-sm font-extrabold text-emerald-900 flex items-center gap-1.5">🏢 전사 지점 및 영업소 인가 통제 (넣기 / 빼기)</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                    <form onsubmit="handleAdminAddBranch(event)" class="flex gap-2 bg-white p-2 rounded-xl border border-emerald-200">
+                        <input type="text" id="new-branch-name" required class="flex-1 p-2 text-sm rounded-lg border-none focus:outline-none focus:ring-0" placeholder="추가할 지점명 (예: 강남점)">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg shrink-0 transition">🏢 지점 추가</button>
+                    </form>
+                    <div class="md:col-span-2 flex flex-wrap gap-2 items-center bg-white p-3 rounded-xl border min-h-[46px]" id="admin-branch-list-box"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl space-y-4 shadow-sm">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-gray-800 flex items-center gap-1.5">🚘 신규 업무 차량 배정 (넣기)</h3>
+                    </div>
+                    <form onsubmit="handleAdminAddCar(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">소속 배정 지점</label>
+                            <select id="new-car-branch" class="w-full p-2 border rounded-lg text-sm bg-white font-medium text-gray-700"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">차량 번호</label>
+                            <input type="text" id="new-car-num" required class="w-full p-2 border rounded-lg text-sm bg-white font-mono" placeholder="123가 4567">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">차량 모델명</label>
+                            <input type="text" id="new-car-model" required class="w-full p-2 border rounded-lg text-sm bg-white" placeholder="예: 팰리세이드">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">⛽ 지정 유종 (연료 분류)</label>
+                            <select id="new-car-fuel" class="w-full p-2 border rounded-lg text-sm bg-white font-medium text-gray-700">
+                                <option value="휘발유">휘발유 (가솔린)</option>
+                                <option value="경유">경유 (디젤)</option>
+                                <option value="하이브리드">하이브리드 (HEV)</option>
+                                <option value="전기">전기차 (EV)</option>
+                                <option value="LPG">LPG (가스)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="sm:col-span-2 bg-green-600 hover:bg-green-700 text-white font-black text-xs p-2.5 rounded-lg transition shadow-sm mt-1">
+                            🚘 지점 차량 전산 등록
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 p-5 rounded-2xl space-y-4 shadow-sm">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-gray-800 flex items-center gap-1.5">👥 지점별 직원 등록 및 권한 설정</h3>
+                    </div>
+                    <form onsubmit="handleAdminAddStaff(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">직원 이름</label>
+                            <input type="text" id="new-staff-name" required class="w-full p-2 border rounded-lg text-sm bg-white" placeholder="홍길동">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">소속 근무 지점</label>
+                            <select id="new-staff-branch" class="w-full p-2 border rounded-lg text-sm bg-white font-medium text-gray-700"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">접속 로그인 ID</label>
+                            <input type="text" id="new-staff-id" required class="w-full p-2 border rounded-lg text-sm bg-white font-mono" placeholder="id입력">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">접속 비밀번호 (PW)</label>
+                            <input type="password" id="new-staff-pw" required class="w-full p-2 border rounded-lg text-sm bg-white" placeholder="••••">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-bold text-gray-500 mb-1">🔑 시스템 연동 권한 부여 등급</label>
+                            <select id="new-staff-role" class="w-full p-2 border rounded-lg text-sm bg-white font-bold text-blue-700">
+                                <option value="general">일반 직원 (모바일 기록 전용)</option>
+                                <option value="master">마스터 관리자 (PC Admin 대시보드 접근 인가 ⭕)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="sm:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs p-2.5 rounded-lg transition shadow-sm mt-1">
+                            👥 계정 생성 및 권한 부여 발급
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                
+                <div class="space-y-6">
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-extrabold text-gray-800 flex items-center gap-1.5">📋 실시간 차량 인가 대장</h3>
+                        <div class="overflow-hidden border border-gray-200 rounded-xl bg-white shadow-sm">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-gray-800 text-gray-200 font-bold border-b">
+                                        <th class="p-3">지점</th>
+                                        <th class="p-3">차량 번호</th>
+                                        <th class="p-3">모델(유종)</th>
+                                        <th class="p-3 text-center">제어</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-car-table-body" class="divide-y divide-gray-100 text-gray-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-extrabold text-gray-800 flex items-center gap-1.5">👥 사내 인가 직원 명부 관리</h3>
+                        <div class="overflow-hidden border border-gray-200 rounded-xl bg-white shadow-sm">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-gray-700 text-white font-bold border-b">
+                                        <th class="p-3">이름/지점</th>
+                                        <th class="p-3">로그인 ID</th>
+                                        <th class="p-3">보안등급</th>
+                                        <th class="p-3 text-center">제어</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-staff-table-body" class="divide-y divide-gray-100 text-gray-700">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:col-span-2 space-y-3">
+                    <h3 class="text-sm font-extrabold text-gray-800 flex items-center gap-1.5">📊 전 지점 통합 차량 전체 사용 기록 리스트 (도착 최신순)</h3>
+                    <div class="overflow-hidden border border-gray-200 rounded-xl bg-white shadow-sm max-h-[580px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead class="bg-gray-700 text-white font-bold sticky top-0 z-10 shadow">
+                                <tr>
+                                    <th class="p-3 pl-4">구분</th>
+                                    <th class="p-3">매칭 차량(유종)</th>
+                                    <th class="p-3">등록 지점/직원</th>
+                                    <th class="p-3">일시 / 지출분류</th>
+                                    <th class="p-3">주행거리 / 지출금액</th>
+                                    <th class="p-3">상세 메모</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-total-logs-table-body" class="divide-y divide-gray-100 text-gray-700 text-[12px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let MOCK_BRANCHES = ["동대문점", "노원점", "강남점"];
+
+        let MOCK_USERS = [
+            { id: "admin", pw: "1234", name: "유진희", branch: "동대문점", role: "master" },
+            { id: "klass1", pw: "asdf", name: "김한주", branch: "노원점", role: "master" },
+            { id: "klass8", pw: "asdf", name: "김미영", branch: "노원점", role: "master" },
+            { id: "klass2", pw: "1234", name: "주찬민", branch: "동대문점", role: "general" },
+            { id: "klass3", pw: "1234", name: "박준호", branch: "동대문점", role: "general" },
+            { id: "klass4", pw: "1234", name: "박영훈", branch: "동대문점", role: "general" },
+            { id: "klass5", pw: "1234", name: "윤신", branch: "동대문점", role: "general" },
+            { id: "klass6", pw: "1234", name: "최원", branch: "노원점", role: "general" },
+            { id: "klass7", pw: "1234", name: "윤지웅", branch: "노원점", role: "general" }
+        ];
+
+        let MOCK_VEHICLES = [
+            { vehicle_num: "193호 2697", model_name: "팰리세이드", fuel: "경유", branch: "동대문점" },
+            { vehicle_num: "156하 9221", model_name: "그랜저", fuel: "하이브리드", branch: "노원점" }
+        ];
+
+        let MOCK_HISTORIES = [
+            { vehicle_num: "193호 2697", type: "운행", branch_name:"동대문점", user_name: "유진희", start_datetime: "2026-07-06 09:00", end_datetime: "2026-07-06 11:30", start_km: 12450, end_km: 12510, purpose: "거래처방문", memo: "강남 협력사 미팅" },
+            { vehicle_num: "193호 2697", type: "지출/정비", branch_name:"동대문점", user_name: "유진희", expense_date: "2026-07-08", expense_type: "주유비", amount: 55000, memo: "만땅 주유" },
+            { vehicle_num: "156하 9221", type: "운행", branch_name:"노원점", user_name: "김한주", start_datetime: "2026-07-07 14:00", end_datetime: "2026-07-07 15:20", start_km: 45200, end_km: 45235, purpose: "일반업무용", memo: "구청 서류 제출" }
+        ];
+
+        let currentUserName = ""; let currentBranchName = ""; let currentVehicleNum = ""; let currentUserRole = "";
+
+        function switchViewMode(mode) {
+            if (mode === 'admin') {
+                if (!currentUserName || currentUserRole !== "master") {
+                    alert("⚠️ 접근 거부\nPC 관리자 화면은 '마스터 관리자' 권한이 부여된 계정으로 로그인해야만 접근할 수 있습니다.");
+                    return;
+                }
+            }
+
+            document.getElementById('user-view-container').classList.add('hidden');
+            document.getElementById('admin-view-container').classList.add('hidden');
+            
+            if (mode === 'user') {
+                document.getElementById('user-view-container').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-view-container').classList.remove('hidden');
+                renderAdminControlPanels(); 
+            }
+        }
+
+        function updateAdminBranchUI() {
+            const listBox = document.getElementById('admin-branch-list-box');
+            const carSelect = document.getElementById('new-car-branch');
+            const staffSelect = document.getElementById('new-staff-branch');
+            document.getElementById('admin-summary-branches').innerText = `${MOCK_BRANCHES.length}개`;
+
+            listBox.innerHTML = "";
+            MOCK_BRANCHES.forEach((bName, index) => {
+                const badge = document.createElement('div');
+                badge.className = "bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-emerald-200 shadow-sm";
+                badge.innerHTML = `<span>🏢 ${bName}</span><button onclick="handleAdminDeleteBranch(${index})" class="text-red-500 hover:text-red-700 font-extrabold font-mono text-[11px]">×</button>`;
+                listBox.appendChild(badge);
+            });
+
+            carSelect.innerHTML = ""; staffSelect.innerHTML = "";
+            MOCK_BRANCHES.forEach(bName => {
+                const opt1 = document.createElement('option'); opt1.value = bName; opt1.innerText = bName;
+                const opt2 = document.createElement('option'); opt2.value = bName; opt2.innerText = bName;
+                carSelect.appendChild(opt1); staffSelect.appendChild(opt2);
+            });
+        }
+
+        function handleAdminAddBranch(e) {
+            e.preventDefault();
+            const bInput = document.getElementById('new-branch-name');
+            const bName = bInput.value.trim();
+            if (MOCK_BRANCHES.includes(bName)) { alert("이미 존재하는 지점입니다."); return; }
+            MOCK_BRANCHES.push(bName); bInput.value = ""; updateAdminBranchUI();
+        }
+
+        function handleAdminDeleteBranch(index) {
+            if (confirm(`지점을 제외하시겠습니까?`)) { MOCK_BRANCHES.splice(index, 1); updateAdminBranchUI(); }
+        }
+
+        function renderAdminControlPanels() {
+            updateAdminBranchUI(); 
+            renderAdminCarTable(); 
+            renderAdminStaffTable(); // 직원 명부 렌더링 장치 작동
+            renderAdminTotalLogsTable();
+        }
+
+        function renderAdminCarTable() {
+            const tableBody = document.getElementById('admin-car-table-body');
+            document.getElementById('admin-summary-cars').innerText = `${MOCK_VEHICLES.length}대`;
+            tableBody.innerHTML = "";
+            if (MOCK_VEHICLES.length === 0) { tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">차량이 없습니다.</td></tr>`; return; }
+
+            MOCK_VEHICLES.forEach((car, index) => {
+                const row = document.createElement('tr'); row.className = "hover:bg-gray-50 border-b";
+                row.innerHTML = `
+                    <td class="p-2.5 font-bold text-gray-600">${car.branch}</td>
+                    <td class="p-2.5 font-mono font-bold text-blue-600">${car.vehicle_num}</td>
+                    <td class="p-2.5 text-gray-700 font-medium">${car.model_name} <span class="text-[10px] text-gray-400 font-semibold bg-gray-100 px-1 rounded">${car.fuel || '미지정'}</span></td>
+                    <td class="p-2.5 text-center"><button onclick="handleAdminDeleteCar(${index})" class="text-red-500 hover:text-red-700 font-bold text-[11px] border border-red-200 bg-red-50 px-2 py-1 rounded">빼기</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 👥 [신설] 사내 직원 관리 명부 리스트 그리기 및 카운팅 함수 (빼기 연동 포함 🗑️)
+        function renderAdminStaffTable() {
+            const tableBody = document.getElementById('admin-staff-table-body');
+            document.getElementById('admin-summary-staffs').innerText = `${MOCK_USERS.length}명`;
+            tableBody.innerHTML = "";
+
+            if (MOCK_USERS.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">등록된 계정이 없습니다.</td></tr>`; return;
+            }
+
+            MOCK_USERS.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-50 border-b text-[12px]";
+                
+                // 마스터 등급 시 가독성 높은 블루 배지 부여
+                const roleBadge = user.role === 'master' ? `<span class="bg-blue-600 text-white font-extrabold px-1 py-0.5 rounded text-[10px]">마스터</span>` : `<span class="bg-gray-100 text-gray-600 px-1 py-0.5 rounded text-[10px]">일반</span>`;
+
+                row.innerHTML = `
+                    <td class="p-2.5 font-semibold text-gray-800">${user.name} <span class="text-[10px] text-gray-400 font-medium">(${user.branch})</span></td>
+                    <td class="p-2.5 font-mono text-gray-600 font-medium">${user.id}</td>
+                    <td class="p-2.5 text-center">${roleBadge}</td>
+                    <td class="p-2.5 text-center">
+                        <button onclick="handleAdminDeleteStaff(${index})" class="text-red-500 hover:text-red-700 font-bold text-[11px]">제외</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function renderAdminTotalLogsTable() {
+            const tableBody = document.getElementById('admin-total-logs-table-body');
+            document.getElementById('admin-summary-logs').innerText = `${MOCK_HISTORIES.length}건`;
+            tableBody.innerHTML = "";
+            if (MOCK_HISTORIES.length === 0) { tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">내역이 없습니다.</td></tr>`; return; }
+
+            const sortedHistories = [...MOCK_HISTORIES].sort((a, b) => {
+                const timeA = a.type === "운행" ? a.end_datetime : `${a.expense_date} 23:59`;
+                const timeB = b.type === "운행" ? b.end_datetime : `${b.expense_date} 23:59`;
+                return new Date(timeB) - new Date(timeA);
+            });
+
+            sortedHistories.forEach(log => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-gray-50 border-b transition-colors";
+                const currentFuel = MOCK_VEHICLES.find(v => v.vehicle_num === log.vehicle_num)?.fuel || "휘발유";
+                let badgeHTML = log.type === "운행" ? `<span class="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded text-[10px]">📋 운행</span>` : `<span class="bg-orange-100 text-orange-800 font-bold px-1.5 py-0.5 rounded text-[10px]">💳 지출</span>`;
+                let infoTimeHTML = log.type === "운행" ? `<div class="text-gray-400 text-[11px]">도착: ${log.end_datetime}</div>` : `<div class="font-bold text-orange-600">${log.expense_type}</div>`;
+                let infoValueHTML = log.type === "운행" ? `<span class="font-medium text-gray-700">${(log.end_km - log.start_km)} km 운행</span>` : `<span class="font-bold text-blue-600">${log.amount.toLocaleString()} 원</span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3 pl-4">${badgeHTML}</td>
+                    <td class="p-3 font-mono font-bold text-gray-900">${log.vehicle_num} <span class="text-[9px] font-normal text-gray-400 bg-gray-50 px-1 border rounded">${currentFuel}</span></td>
+                    <td class="p-3"><div class="font-semibold">${log.branch_name || '지점'}</div><div class="text-[11px] text-gray-400">${log.user_name}</div></td>
+                    <td class="p-3">${infoTimeHTML}</td>
+                    <td class="p-3">${infoValueHTML}</td>
+                    <td class="p-3 text-gray-500 font-medium">${log.memo || '-'}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function handleAdminAddCar(e) {
+            e.preventDefault();
+            const num = document.getElementById('new-car-num').value.trim();
+            const model = document.getElementById('new-car-model').value.trim();
+            const branch = document.getElementById('new-car-branch').value;
+            const fuel = document.getElementById('new-car-fuel').value;
+
+            if (!branch) { alert("지점을 선택해 주세요."); return; }
+            if (MOCK_VEHICLES.some(v => v.vehicle_num === num)) { alert("이미 인가된 번호입니다."); return; }
+
+            MOCK_VEHICLES.push({ vehicle_num: num, model_name: model, fuel: fuel, branch: branch });
+            alert(`[차량 입고] ${branch} -> ${model}(${fuel})`);
+            document.getElementById('new-car-num').value = ""; document.getElementById('new-car-model').value = "";
+            renderAdminControlPanels();
+            if(currentBranchName) matchVehicleByBranch(currentBranchName);
+        }
+
+        function handleAdminDeleteCar(index) {
+            if (confirm(`차량을 제외하겠습니까?`)) { MOCK_VEHICLES.splice(index, 1); renderAdminControlPanels(); if(currentBranchName) matchVehicleByBranch(currentBranchName); }
+        }
+
+        function handleAdminAddStaff(e) {
+            e.preventDefault();
+            const sName = document.getElementById('new-staff-name').value.trim();
+            const sBranch = document.getElementById('new-staff-branch').value;
+            const sId = document.getElementById('new-staff-id').value.trim();
+            const sPw = document.getElementById('new-staff-pw').value.trim();
+            const sRole = document.getElementById('new-staff-role').value;
+
+            if (!sBranch) { alert("근무 지점을 선택해 주세요."); return; }
+            if (MOCK_USERS.some(u => u.id === sId)) { alert("이미 존재하는 ID입니다."); return; }
+
+            MOCK_USERS.push({ id: sId, pw: sPw, name: sName, branch: sBranch, role: sRole });
+            alert(`[직원 등록 완료] 이름: ${sName} | 등급: ${sRole === 'master' ? '마스터' : '일반'}`);
+            document.getElementById('new-staff-name').value = ""; document.getElementById('new-staff-id').value = ""; document.getElementById('new-staff-pw').value = "";
+            renderAdminControlPanels();
+        }
+
+        // 👥 [신설] 직원 계정 명부 대장 제외(빼기) 처리기
+        function handleAdminDeleteStaff(index) {
+            const target = MOCK_USERS[index];
+            if (confirm(`정말 [${target.branch}] ${target.name} 직원의 계정 권한을 전산에서 제외(빼기)하겠습니까?`)) {
+                MOCK_USERS.splice(index, 1);
+                renderAdminControlPanels();
+            }
+        }
+
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('start-date').value = today; document.getElementById('end-date').value = today; document.getElementById('expense-date').value = today;
+        }
+
+        function matchVehicleByBranch(branchName) {
+            const displayEl = document.getElementById('matched-vehicle-display');
+            const matchedCar = MOCK_VEHICLES.find(car => car.branch === branchName);
+            if (matchedCar) {
+                currentVehicleNum = matchedCar.vehicle_num;
+                displayEl.innerText = `${matchedCar.vehicle_num} (${matchedCar.model_name} / ${matchedCar.fuel})`;
+                displayEl.className = "text-base font-extrabold text-blue-900 mt-0.5";
+            } else {
+                currentVehicleNum = ""; displayEl.innerText = "배정된 차량이 없습니다."; displayEl.className = "text-base font-extrabold text-red-500 mt-0.5";
+            }
+        }
+
+        function navigateTo(screenName) {
+            document.getElementById('main-screen').classList.add('hidden'); document.getElementById('history-screen').classList.add('hidden');
+            if (screenName === 'main') { document.getElementById('main-screen').classList.remove('hidden'); renderHistorySummary(); } 
+            else if (screenName === 'history') { document.getElementById('history-screen').classList.remove('hidden'); renderFullHistoryList(); }
+        }
+
+        function createCardHTML(item) {
+            if (item.type === "운행") {
+                return `<div class="flex justify-between items-center mb-1"><span class="bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded text-[10px]">📋 운행</span></div><p class="text-[11px] text-gray-700">🛫 <b>출발:</b> ${item.start_datetime}</p><p class="text-[11px] text-gray-700">🛬 <b class="text-green-600">도착:</b> ${item.end_datetime} (${item.end_km}km)</p>`;
+            } else {
+                return `<div class="flex justify-between items-center mb-1"><span class="bg-orange-100 text-orange-700 font-bold px-1.5 py-0.5 rounded text-[10px]">💳 지출</span></div><p class="text-[11px] text-gray-700">📅 <b>지출일:</b> ${item.expense_date} | ${item.expense_type}</p><p class="text-blue-600 font-bold">💰 금액: ${item.amount.toLocaleString()} 원</p>`;
+            }
+        }
+
+        function renderHistorySummary() {
+            const container = document.getElementById('main-history-summary'); container.innerHTML = "";
+            const filtered = MOCK_HISTORIES.filter(i => i.vehicle_num === currentVehicleNum);
+            document.getElementById('history-count').innerText = filtered.length;
+            if(filtered.length === 0) { container.innerHTML = `<p class="text-center text-xs text-gray-400 py-4">내역이 없습니다.</p>`; return; }
+            filtered.slice(0, 2).forEach(item => {
+                const card = document.createElement('div'); card.className = "bg-gray-50 border p-2.5 rounded-xl space-y-1 text-xs";
+                card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-gray-400 text-[10px]">📝 ${item.memo}</p>`:''}`;
+                container.appendChild(card);
+            });
+        }
+
+        function renderFullHistoryList() {
+            const container = document.getElementById('full-history-list'); container.innerHTML = "";
+            const filtered = MOCK_HISTORIES.filter(i => i.vehicle_num === currentVehicleNum);
+            if(filtered.length === 0) { container.innerHTML = `<p class="text-center text-xs text-gray-400 py-8">기록이 없습니다.</p>`; return; }
+            filtered.forEach(item => {
+                const card = document.createElement('div'); card.className = "bg-white border p-3 rounded-xl space-y-1 text-xs";
+                card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-gray-400 text-[10px]">📝 ${item.memo}</p>`:''}`;
+                container.appendChild(card);
+            });
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const id = document.getElementById('user-id').value.trim();
+            const pw = document.getElementById('user-pw').value.trim();
+            const errorMsg = document.getElementById('login-error');
+            const user = MOCK_USERS.find(u => u.id === id && u.pw === pw);
+
+            if (user) {
+                currentUserName = user.name; currentBranchName = user.branch; currentUserRole = user.role;
+                errorMsg.classList.add('hidden');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                document.getElementById('welcome-msg').innerText = `안녕하세요, ${currentUserName}님 (${currentUserRole === 'master' ? '마스터' : '직원'})`;
+                document.getElementById('branch-msg').innerText = `소속: ${currentBranchName}`;
+                matchVehicleByBranch(currentBranchName); setDefaultDates(); renderHistorySummary();
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            currentUserName = ""; currentBranchName = ""; currentVehicleNum = ""; currentUserRole = "";
+            document.getElementById('user-id').value = ""; document.getElementById('user-pw').value = "";
+            document.getElementById('main-screen').classList.add('hidden'); document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+
+        function switchTab(type) {
+            document.getElementById('log-type').value = type === 'drive' ? '운행' : '지출/정비';
+            document.getElementById('tab-drive').className = type === 'drive' ? "flex-1 text-center py-3 font-bold text-sm border-b-2 border-blue-600 text-blue-600" : "flex-1 text-center py-3 font-bold text-sm border-b-2 border-transparent text-gray-400";
+            document.getElementById('tab-expense').className = type === 'expense' ? "flex-1 text-center py-3 font-bold text-sm border-b-2 border-blue-600 text-blue-600" : "flex-1 text-center py-3 font-bold text-sm border-b-2 border-transparent text-gray-400";
+            type === 'drive' ? document.getElementById('drive-fields').classList.remove('hidden') : document.getElementById('drive-fields').classList.add('hidden');
+            type === 'expense' ? document.getElementById('expense-fields').classList.remove('hidden') : document.getElementById('expense-fields').classList.add('hidden');
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            const logType = document.getElementById('log-type').value;
+            if (!currentVehicleNum) { alert("지점에 매칭된 차량이 없습니다."); return; }
+
+            let newLog = { vehicle_num: currentVehicleNum, type: logType, branch_name: currentBranchName, user_name: currentUserName, memo: document.getElementById('content-memo').value.trim() };
+
+            if (logType === "운행") {
+                newLog.start_datetime = document.getElementById('start-date').value + " " + (document.getElementById('start-time').value || "00:00");
+                newLog.start_km = Number(document.getElementById('start-km').value) || 0;
+                newLog.end_datetime = document.getElementById('end-date').value + " " + (document.getElementById('end-time').value || "00:00");
+                newLog.end_km = Number(document.getElementById('end-km').value) || 0;
+                newLog.purpose = document.getElementById('drive-purpose').value;
+            } else {
+                newLog.expense_date = document.getElementById('expense-date').value;
+                newLog.expense_type = document.getElementById('expense-type').value;
+                newLog.amount = Number(document.getElementById('amount').value) || 0;
+            }
+
+            MOCK_HISTORIES.push(newLog); alert("차량 기록이 등록되었습니다."); renderHistorySummary();
+            document.getElementById('start-time').value = ""; document.getElementById('start-km').value = ""; document.getElementById('end-time').value = ""; document.getElementById('end-km').value = ""; document.getElementById('amount').value = ""; document.getElementById('content-memo').value = "";
+            setDefaultDates();
+        }
+    </script>
+</body>
+</html>
