@@ -1,4 +1,4 @@
-<!-- 로그인창 그래픽추가버전 -->
+<!-- 업데이트 26.9.30 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -143,20 +143,26 @@
             </div>
         </header>
 
+        <!-- 차량 선택은 등록 화면과 전체 내역 화면에서 공통 사용 -->
+        <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6" aria-label="지점 차량 선택">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 sm:p-6 rounded-2xl shadow-md grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div class="space-y-1.5">
+                    <span class="text-sm font-bold text-blue-200">🏢 우리 지점 업무 차량 <span id="branch-vehicle-count">0대</span></span>
+                    <div id="matched-vehicle-display" aria-live="polite" class="text-xl font-black">차량 정보 불러오는 중...</div>
+                    <p class="text-xs text-blue-100">선택한 차량의 운행·지출 기록을 등록하고 조회합니다.</p>
+                </div>
+                <div>
+                    <label for="vehicle-select" class="block text-sm font-bold mb-2">🚗 사용할 차량 선택</label>
+                    <select id="vehicle-select" onchange="handleVehicleChange(this.value)" disabled class="w-full bg-white text-slate-900 border border-blue-200 rounded-xl p-3 text-sm font-bold">
+                        <option value="">차량 정보 불러오는 중...</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
         <!-- 메인 와이드 본문 콘텐츠 (2열 그리드) -->
         <main id="main1" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
             
-            <!-- 지점 배정 차량 상태 상단 배너 -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 sm:p-6 rounded-2xl shadow-md flex justify-between items-center">
-                <div class="space-y-1.5">
-                    <span class="text-xs sm:text-sm font-bold text-blue-200 uppercase tracking-wider">🏢 현재 지점 배정 업무 차량</span>
-                    <div id="matched-vehicle-display" class="text-xl sm:text-2xl font-black tracking-tight">차량 정보 불러오는 중...</div>
-                </div>
-                <div class="text-3xl sm:text-4xl bg-white/10 p-3.5 rounded-xl backdrop-blur-sm">
-                    🚗
-                </div>
-            </div>
-
             <!-- 와이드 2단 분할 레이아웃 (양쪽 높이 균일 정렬) -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
@@ -317,7 +323,7 @@
                             <h2 class="text-xl font-bold text-gray-900" id="history-screen-title">전체 차량 사용 내역</h2>
                             <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md font-bold" id="full-history-total-count">총 0건</span>
                         </div>
-                        <p class="text-xs sm:text-sm text-slate-500 mt-1">해당 지점 배정 차량의 모든 운행 및 지출/정비 기록입니다.</p>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1">상단에서 선택한 차량의 모든 운행 및 지출/정비 기록입니다.</p>
                     </div>
                     <button onclick="navigateTo('main')" class="text-xs sm:text-sm bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-arrow-left"></i> 대시보드로 돌아가기
@@ -383,22 +389,22 @@
         <footer class="mt-auto border-t border-gray-200 bg-white py-6 text-gray-400 text-center text-xs leading-relaxed font-medium">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="flex flex-wrap justify-center gap-x-2 gap-y-1">
-                    <span><b>상호:</b> 리스맨소프트</span>
+                    <span><b>상호:</b> 클라스오토</span>
                     <span>|</span>
-                    <span><b>주소:</b> 서울 동대문구 천호대로 441-1, 2층</span>
+                    <span><b>주소:</b> 서울 노원구 동일로243길49, 4층 (상계동, 씨에스빌딩)</span>
                     <span>|</span>
-                    <span><b>대표:</b> 유진희</span>
+                    <span><b>대표:</b> 김한주</span>
                     <span>|</span>
                     <span><b>전화:</b> 02-6212-7107</span>
                 </div>
                 <div class="flex flex-wrap justify-center gap-x-2 gap-y-1 mt-1">
-                    <span><b>이메일:</b> leasemansoft@naver.com</span>
+                    <span><b>이메일:</b> info@klassauto.kr</span>
                     <span>|</span>
-                    <span><b>사업자등록번호:</b> 745-06-01064</span>
-                    <span>|</span>
-                    <span><b>통신판매업신고번호:</b> 제2026-서울동대문-1498호</span>
+                    <span><b>사업자등록번호:</b> 102-22-95843</span>
+                    <!-- <span>|</span>
+                    <span><b>통신판매업신고번호:</b> 제2026-서울동대문-1498호</span> -->
                 </div>
-                <p class="mt-2.5 text-gray-300 font-bold font-mono tracking-wide">ⓒ LEASEMANSOFT ALL RIGHTS RESERVED.</p>
+                <p class="mt-2.5 text-gray-300 font-bold font-mono tracking-wide">ⓒ KLASSAUTO ALL RIGHTS RESERVED.</p>
             </div>
         </footer>
     </div>
@@ -413,6 +419,7 @@
         let currentBranchName = "";
         let currentUserRole = "";
         let currentVehicleNum = "";
+        let currentVehicleName = "";
         let currentCompanyId = "";
         let currentCompanyName = "";
 
@@ -670,7 +677,7 @@
             e.preventDefault();
             const logType = document.getElementById('log-type').value;
 
-            if (!currentVehicleNum) {
+            if (!getBranchVehicles().some(car => normalizeVehicleNum(car.vehicle_num) === normalizeVehicleNum(currentVehicleNum))) {
                 alert("지점에 배정된 매칭 차량이 없습니다.");
                 return;
             }
@@ -748,6 +755,10 @@
             currentBranchName = "";
             currentUserRole = "";
             currentVehicleNum = "";
+            currentVehicleName = "";
+            MOCK_VEHICLES = [];
+            MOCK_HISTORIES = [];
+            closeEditModal();
 
             const idEl = document.getElementById('user-id');
             const pwEl = document.getElementById('user-pw');
@@ -806,16 +817,76 @@
             document.getElementById('expense-date').value = today;
         }
 
+        function normalizeVehicleNum(value) {
+            return String(value || '').replace(/\s+/g, '');
+        }
+
+        function getBranchVehicles(branchName = currentBranchName) {
+            return MOCK_VEHICLES.filter(car =>
+                String(car.branch || '').trim() === String(branchName || '').trim() &&
+                String(branchName || '').trim() !== '' &&
+                normalizeVehicleNum(car.vehicle_num) &&
+                (car.company_id == null || String(car.company_id) === String(currentCompanyId))
+            );
+        }
+
         function matchVehicleByBranch(branchName) {
-            const displayEl = document.getElementById('matched-vehicle-display');
-            const matchedCar = MOCK_VEHICLES.find(car => car.branch === branchName);
-            if (matchedCar) {
-                currentVehicleNum = matchedCar.vehicle_num;
-                displayEl.innerText = `${matchedCar.vehicle_num} (${matchedCar.model_name} / ${matchedCar.fuel || '휘발유'})`;
+            const cars = getBranchVehicles(branchName);
+            const select = document.getElementById('vehicle-select');
+            const previous = normalizeVehicleNum(currentVehicleNum);
+            select.replaceChildren();
+            document.getElementById('branch-vehicle-count').textContent = `${cars.length}대`;
+            select.disabled = cars.length === 0;
+            if (!cars.length) {
+                select.add(new Option('배정된 차량이 없습니다', ''));
             } else {
-                currentVehicleNum = "";
-                displayEl.innerText = "현재 배정된 차량이 없습니다.";
+                cars.forEach(car => select.add(new Option(
+                    `${car.vehicle_num} · ${car.model_name || '차종 미등록'} · ${car.fuel || '연료 미등록'}`,
+                    String(car.vehicle_num)
+                )));
             }
+            const selected = cars.find(car => normalizeVehicleNum(car.vehicle_num) === previous) || cars[0];
+            applyVehicleSelection(selected);
+        }
+
+        function applyVehicleSelection(car) {
+            currentVehicleNum = car ? String(car.vehicle_num) : '';
+            currentVehicleName = car ? (car.model_name || '') : '';
+            document.getElementById('vehicle-select').value = currentVehicleNum;
+            document.getElementById('matched-vehicle-display').textContent = car
+                ? `${currentVehicleNum} (${currentVehicleName || '차종 미등록'})`
+                : '현재 배정된 차량이 없습니다.';
+            document.getElementById('history-screen-title').textContent = car
+                ? `${currentVehicleNum} 사용 내역` : '차량 사용 내역';
+            document.querySelector('#log-form button[type="submit"]').disabled = !car;
+        }
+
+        function handleVehicleChange(vehicleNum) {
+            const car = getBranchVehicles().find(car => String(car.vehicle_num) === vehicleNum);
+            if (!car) return;
+            if (normalizeVehicleNum(currentVehicleNum) !== normalizeVehicleNum(vehicleNum)) {
+                const fields = ['start-km', 'end-km', 'amount', 'content-memo'];
+                if (fields.some(id => document.getElementById(id).value.trim()) &&
+                    !confirm('차량을 변경하면 작성 중인 주행거리·금액·메모가 초기화됩니다. 변경할까요?')) {
+                    document.getElementById('vehicle-select').value = currentVehicleNum;
+                    return;
+                }
+                fields.forEach(id => document.getElementById(id).value = '');
+                setDefaultDates();
+                closeEditModal();
+            }
+            applyVehicleSelection(car);
+            renderHistorySummary();
+            renderFullHistoryList();
+        }
+
+        function getSelectedVehicleHistories() {
+            const number = normalizeVehicleNum(currentVehicleNum);
+            if (!number) return [];
+            return MOCK_HISTORIES.filter(item =>
+                normalizeVehicleNum(item.vehicle_num) === number &&
+                (item.company_id == null || String(item.company_id) === String(currentCompanyId))
+            );
         }
 
         function formatDateTime(dateTime) {
@@ -917,8 +988,8 @@
                         <span class="text-xs bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded">${item.purpose || '일반업무용'}</span>
                     </div>
                     <div class="space-y-1.5 text-xs text-gray-700 ridi-font">
-                        <p>🛫 <span class="font-semibold text-gray-900">출발:</span> ${formatDateTime(item.start_datetime)} (${startKmFormatted} km)</p>
-                        <p>🛬 <span class="font-semibold text-emerald-700">도착:</span> ${formatDateTime(item.end_datetime)} (${endKmFormatted} km, 주행: <b class="text-blue-600 font-bold">${distanceFormatted} km</b>)</p>
+                        <p>🏁 <span class="font-semibold text-emerald-700">도착:</span> ${formatDateTime(item.end_datetime)} (${endKmFormatted} km, 주행: <b class="text-blue-600 font-bold">${distanceFormatted} km</b>)</p>
+                        <p>🚗 <span class="font-semibold text-gray-900">출발:</span> ${formatDateTime(item.start_datetime)} (${startKmFormatted} km)</p>                        
                     </div>
                 `;
             } else {
@@ -945,7 +1016,7 @@
             const container = document.getElementById('main-history-summary');
             container.innerHTML = "";
 
-            const filtered = MOCK_HISTORIES.filter(i => i.vehicle_num === currentVehicleNum);
+            const filtered = getSelectedVehicleHistories();
             document.getElementById('history-count').innerText = `${filtered.length}건`;
 
             if (filtered.length === 0) {
@@ -956,7 +1027,7 @@
             filtered.slice(0, 5).forEach(item => {
                 const card = document.createElement('div');
                 card.className = "bg-slate-50 hover:bg-slate-100 transition border border-slate-200 p-4 rounded-xl space-y-2 text-sm";
-                card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.memo}</p>` : ''}`;
+                card.innerHTML = createCardHTML(item) + `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.vehicle_num}(${item.vehicle_name}) ${item.memo}</p>`;
                 container.appendChild(card);
             });
         }
@@ -976,11 +1047,7 @@
             driveContainer.innerHTML = "";
             expenseContainer.innerHTML = "";
 
-            // 현재 배정 차량 번호로 필터링
-            const filtered = MOCK_HISTORIES.filter(i => {
-                if (!currentVehicleNum) return false;
-                return (i.vehicle_num || "").includes(currentVehicleNum) || currentVehicleNum.includes(i.vehicle_num || "");
-            });
+            const filtered = getSelectedVehicleHistories();
 
             if (totalCountEl) totalCountEl.innerText = `총 ${filtered.length}건`;
 
@@ -994,7 +1061,7 @@
                 driveLogs.forEach(item => {
                     const card = document.createElement('div');
                     card.className = "bg-white border border-slate-200 hover:border-blue-300 transition-all p-4 rounded-xl space-y-2 text-sm shadow-xs";
-                    card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.memo}</p>` : ''}`;
+                    card.innerHTML = createCardHTML(item) + `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.vehicle_num}(${item.vehicle_name}) ${item.memo}</p>`;
                     driveContainer.appendChild(card);
                 });
             }
@@ -1009,7 +1076,7 @@
                 expenseLogs.forEach(item => {
                     const card = document.createElement('div');
                     card.className = "bg-white border border-slate-200 hover:border-amber-300 transition-all p-4 rounded-xl space-y-2 text-sm shadow-xs";
-                    card.innerHTML = createCardHTML(item) + `${item.memo ? `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.memo}</p>` : ''}`;
+                    card.innerHTML = createCardHTML(item) + `<p class="text-slate-500 text-xs border-t pt-2 mt-2">📝 ${item.vehicle_num}(${item.vehicle_name}) ${item.memo}</p>`;
                     expenseContainer.appendChild(card);
                 });
             }

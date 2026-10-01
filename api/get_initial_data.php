@@ -1,4 +1,5 @@
 <?php
+//user.html에서 쓰는 데이터
 include_once "db.php";
 
 try {

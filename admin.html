@@ -682,7 +682,7 @@
                                     <th class="p-2.5">매칭 차량(유종)</th>
                                     <th class="p-2.5">등록 직원</th>
                                     <th class="p-2.5">일시 / 지출분류</th>
-                                    <th class="p-2.5">거리 / 지출금액</th>
+                                    <th class="p-2.5">출발 / 도착 / 지출금액</th>
                                     <th class="p-2.5 pr-4">상세 메모</th>
                                 </tr>
                             </thead>
@@ -714,12 +714,12 @@
                         : `<div class="font-bold text-amber-600 text-[11px] whitespace-nowrap">${log.expense_type}(${log.expense_date})</div>`;
                     
                     const infoValueHTML = log.type === "운행" 
-                        ? `<span class="font-semibold text-gray-800 whitespace-nowrap">${(Number(log.end_km) - Number(log.start_km)).toLocaleString()} km</span>` 
+                        ? `<span class="font-semibold text-gray-800 whitespace-nowrap">${Number(log.start_km).toLocaleString()} / ${Number(log.end_km).toLocaleString()} / ${(Number(log.end_km) - Number(log.start_km)).toLocaleString()} km</span>` 
                         : `<span class="font-extrabold text-amber-600 whitespace-nowrap">${Number(log.amount || 0).toLocaleString()} 원</span>`;
 
                     tr.innerHTML = `
                         <td class="p-2 pl-4">${badgeHTML}</td>
-                        <td class="p-2 font-mono font-bold text-gray-900 text-[11px] whitespace-nowrap">${log.vehicle_num} (${currentModel}) <span class="text-[9px] font-normal text-gray-400 bg-gray-50 px-1 border rounded">${currentFuel}</span></td>
+                        <td class="p-2 font-mono font-bold text-gray-900 text-[11px] whitespace-nowrap">${log.vehicle_num} (${log.vehicle_name}) <span class="text-[9px] font-normal text-gray-400 bg-gray-50 px-1 border rounded">${currentFuel}</span></td>
                         <td class="p-2 font-medium text-gray-700 text-[11px] whitespace-nowrap">${log.user_name}</td>
                         <td class="p-2">${infoTimeHTML}</td>
                         <td class="p-2">${infoValueHTML}</td>

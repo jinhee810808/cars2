@@ -1,4 +1,5 @@
 <?php
+//admin.html에서 쓰는 데이터
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");

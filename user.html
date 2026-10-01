@@ -917,8 +917,8 @@
                         <span class="text-xs bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded">${item.purpose || '일반업무용'}</span>
                     </div>
                     <div class="space-y-1.5 text-xs text-gray-700 ridi-font">
-                        <p>🛫 <span class="font-semibold text-gray-900">출발:</span> ${formatDateTime(item.start_datetime)} (${startKmFormatted} km)</p>
-                        <p>🛬 <span class="font-semibold text-emerald-700">도착:</span> ${formatDateTime(item.end_datetime)} (${endKmFormatted} km, 주행: <b class="text-blue-600 font-bold">${distanceFormatted} km</b>)</p>
+                        <p>🏁 <span class="font-semibold text-emerald-700">도착:</span> ${formatDateTime(item.end_datetime)} (${endKmFormatted} km, 주행: <b class="text-blue-600 font-bold">${distanceFormatted} km</b>)</p>
+                        <p>🚗 <span class="font-semibold text-gray-900">출발:</span> ${formatDateTime(item.start_datetime)} (${startKmFormatted} km)</p>                        
                     </div>
                 `;
             } else {
