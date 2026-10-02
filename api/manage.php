@@ -29,8 +29,10 @@ try {
         case 'add_log':
             $company_id   = trim($input['company_id'] ?? '');
             $vehicle_num  = trim($input['vehicle_num'] ?? '');
+            $vehicle_name = trim($input['vehicle_name'] ?? '');
             $type         = trim($input['type'] ?? '운행');
             $branch_name  = trim($input['branch_name'] ?? '');
+            $user_id    = trim($input['user_id'] ?? '');
             $user_name    = trim($input['user_name'] ?? '');
             $memo         = trim($input['memo'] ?? '');
 
@@ -42,12 +44,12 @@ try {
                 $purpose        = $input['purpose'] ?? '일반업무용';
 
                 $sql = "INSERT INTO cars_driving_log 
-                        (company_id, vehicle_num, type, branch_name, user_name, start_datetime, start_km, end_datetime, end_km, purpose, memo) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (company_id, vehicle_num, type, branch_name, user_name, start_datetime, start_km, end_datetime, end_km, purpose, memo, user_id, vehicle_name) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     $company_id, $vehicle_num, $type, $branch_name, $user_name,
-                    $start_datetime, $start_km, $end_datetime, $end_km, $purpose, $memo
+                    $start_datetime, $start_km, $end_datetime, $end_km, $purpose, $memo, $user_id, $vehicle_name
                 ]);
             } else {
                 $expense_date = $input['expense_date'] ?? null;
@@ -55,12 +57,12 @@ try {
                 $amount       = intval($input['amount'] ?? 0);
 
                 $sql = "INSERT INTO cars_driving_log 
-                        (company_id, vehicle_num, type, branch_name, user_name, expense_date, expense_type, amount, memo) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (company_id, vehicle_num, type, branch_name, user_name, expense_date, expense_type, amount, memo, user_id, vehicle_name) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     $company_id, $vehicle_num, $type, $branch_name, $user_name,
-                    $expense_date, $expense_type, $amount, $memo
+                    $expense_date, $expense_type, $amount, $memo, $user_id, $vehicle_name
                 ]);
             }
 
@@ -191,8 +193,8 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("INSERT INTO cars_vehicle_list (vehicle_num, model_name, fuel, branch, company_id) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$num, $model, $fuel, $branch, $company_id]);
+            $stmt = $pdo->prepare("INSERT INTO cars_vehicle_list (vehicle_num, model_name, fuel, branch, company_id, useyn) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$num, $model, $fuel, $branch, $company_id, 'y']);
 
             echo json_encode(["success" => true, "message" => "차량이 정상적으로 등록되었습니다."], JSON_UNESCAPED_UNICODE);
             exit;
@@ -208,13 +210,13 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("DELETE FROM cars_vehicle_list WHERE vehicle_num = ?");
+            $stmt = $pdo->prepare("UPDATE cars_vehicle_list SET useyn='n' WHERE vehicle_num = ?");
             $stmt->execute([$num]);
 
             if ($stmt->rowCount() > 0) {
-                echo json_encode(["success" => true, "message" => "차량이 정상적으로 삭제되었습니다."], JSON_UNESCAPED_UNICODE);
+                echo json_encode(["success" => true, "message" => "차량 사용여부 미사용으로 수정되었습니다."], JSON_UNESCAPED_UNICODE);
             } else {
-                echo json_encode(["success" => false, "message" => "해당 차량을 찾을 수 없거나 이미 삭제되었습니다."], JSON_UNESCAPED_UNICODE);
+                echo json_encode(["success" => false, "message" => "해당 차량을 찾을 수 없거나 이미 수정 완료입니다."], JSON_UNESCAPED_UNICODE);
             }
             exit;
 

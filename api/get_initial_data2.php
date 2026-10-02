@@ -37,7 +37,7 @@ try {
     $users = $stmt2->fetchAll(PDO::FETCH_ASSOC);
     
     // 3. 업무 차량 목록 가져오기 (해당 회사 소속)
-    $stmt3 = $pdo->prepare("SELECT id, vehicle_num, model_name, fuel, branch, company_id FROM cars_vehicle_list WHERE company_id = ? ORDER BY id DESC");
+    $stmt3 = $pdo->prepare("SELECT id, vehicle_num, model_name, fuel, branch, company_id, useyn FROM cars_vehicle_list WHERE company_id = ? ORDER BY id DESC");
     $stmt3->execute([$company_id]);
     $vehicles = $stmt3->fetchAll(PDO::FETCH_ASSOC);
     

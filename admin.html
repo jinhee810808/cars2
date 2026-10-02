@@ -1,4 +1,4 @@
-<!-- logo파일 적용 -->
+<!-- 26.10.2 업데이트 차량사용여부 추가함! -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -247,7 +247,7 @@
                                             <th class="p-3">지점</th>
                                             <th class="p-3">차량 번호</th>
                                             <th class="p-3">모델(유종)</th>
-                                            <th class="p-3 text-center">제어</th>
+                                            <th class="p-3 text-center">사용여부</th>
                                         </tr>
                                     </thead>
                                     <tbody id="admin-car-table-body" class="divide-y divide-gray-100 text-gray-700"></tbody>
@@ -605,11 +605,12 @@
 
             MOCK_VEHICLES.forEach((car, index) => {
                 const row = document.createElement('tr'); row.className = "hover:bg-gray-50 border-b";
+
                 row.innerHTML = `
                     <td class="p-2.5 font-bold text-gray-600">${car.branch}</td>
                     <td class="p-2.5 font-mono font-bold text-blue-600">${car.vehicle_num}</td>
                     <td class="p-2.5 text-gray-700 font-medium">${car.model_name} <span class="text-[10px] text-gray-400 font-semibold bg-gray-100 px-1 rounded">${car.fuel || '미지정'}</span></td>
-                    <td class="p-2.5 text-center"><button onclick="handleAdminDeleteCar(${index})" class="text-red-500 hover:text-red-700 font-bold text-[11px] border border-red-200 bg-red-50 px-2 py-1 rounded">빼기</button></td>
+                    <td class="p-2.5 text-center"><button onclick="handleAdminDeleteCar(${index})" class="text-red-500 hover:text-red-700 font-bold text-[11px] border border-red-200 bg-red-50 px-2 py-1 rounded">${car.useyn==='y'? '사용 Y' : '사용 N' }</button></td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -878,6 +879,12 @@
         async function handleAdminDeleteCar(index) {
             const targetCar = MOCK_VEHICLES[index];
             if (!targetCar) return;
+
+            // 사용 N이면 처리 중단
+            if (String(targetCar.useyn ?? '').trim().toLowerCase() === 'n') {
+                alert("이미 사용N이어서 처리불가합니다");
+                return false;
+            }
 
             if (confirm(`[${targetCar.branch}] ${targetCar.vehicle_num} (${targetCar.model_name}) 차량을 목록에서 제외하겠습니까?`)) {
                 try {
