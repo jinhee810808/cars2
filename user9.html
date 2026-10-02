@@ -686,6 +686,7 @@
                 action: 'add_log',
                 company_id: currentCompanyId,
                 vehicle_num: currentVehicleNum,
+                vehicle_name: currentVehicleName,
                 type: logType,
                 branch_name: currentBranchName,
 
@@ -714,7 +715,7 @@
             }
 
             try {
-                const response = await fetch(`${SERVER_URL}/manage.php`, {
+                const response = await fetch(`${SERVER_URL}/manage3.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)

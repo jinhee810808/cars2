@@ -30,9 +30,11 @@ try {
         case 'add_log':
             $company_id   = trim($input['company_id'] ?? '');
             $vehicle_num  = trim($input['vehicle_num'] ?? '');
+            $vehicle_name = trim($input['vehicle_name'] ?? '');
             $type         = trim($input['type'] ?? '운행');
             $branch_name  = trim($input['branch_name'] ?? '');
             $user_name    = trim($input['user_name'] ?? '');
+            $user_id    = trim($input['user_id'] ?? '');
             $memo         = trim($input['memo'] ?? '');
 
             if ($type === '운행') {
@@ -43,12 +45,12 @@ try {
                 $purpose        = $input['purpose'] ?? '일반업무용';
 
                 $sql = "INSERT INTO cars_driving_log 
-                        (company_id, vehicle_num, type, branch_name, user_name, start_datetime, start_km, end_datetime, end_km, purpose, memo) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (company_id, vehicle_num, type, branch_name, user_name, start_datetime, start_km, end_datetime, end_km, purpose, memo, user_id, vehicle_name) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     $company_id, $vehicle_num, $type, $branch_name, $user_name,
-                    $start_datetime, $start_km, $end_datetime, $end_km, $purpose, $memo
+                    $start_datetime, $start_km, $end_datetime, $end_km, $purpose, $memo, $user_id, $vehicle_name
                 ]);
             } else {
                 $expense_date = $input['expense_date'] ?? null;
@@ -56,12 +58,12 @@ try {
                 $amount       = intval($input['amount'] ?? 0);
 
                 $sql = "INSERT INTO cars_driving_log 
-                        (company_id, vehicle_num, type, branch_name, user_name, expense_date, expense_type, amount, memo) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (company_id, vehicle_num, type, branch_name, user_name, expense_date, expense_type, amount, memo, user_id, vehicle_name) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     $company_id, $vehicle_num, $type, $branch_name, $user_name,
-                    $expense_date, $expense_type, $amount, $memo
+                    $expense_date, $expense_type, $amount, $memo, $user_id, $vehicle_name
                 ]);
             }
 
